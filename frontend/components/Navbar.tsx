@@ -1,15 +1,49 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingCart, Search, User, Menu } from 'lucide-react';
+import { ShoppingCart, Search, User, Menu, LogOut } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function Navbar() {
     const { getTotalItems } = useCart();
     const [searchQuery, setSearchQuery] = useState('');
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [isManager, setIsManager] = useState(false);
+    const [userName, setUserName] = useState('');
     const router = useRouter();
+
+    useEffect(() => {
+        // Check if user is logged in
+        const token = localStorage.getItem('token');
+        const userStr = localStorage.getItem('user');
+        
+        if (token && userStr) {
+            try {
+                const user = JSON.parse(userStr);
+                setIsLoggedIn(true);
+                setIsAdmin(user.vai_tro === 'admin');
+                setIsManager(user.vai_tro === 'manager');
+                setUserName(user.ho_ten || user.email);
+            } catch (error) {
+                console.error('Error parsing user data:', error);
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+            }
+        }
+    }, []);
+
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setIsLoggedIn(false);
+        setIsAdmin(false);
+        setIsManager(false);
+        setUserName('');
+        router.push('/');
+    };
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -25,9 +59,9 @@ export default function Navbar() {
                     {/* Logo */}
                     <Link href="/" className="flex items-center space-x-2">
                         <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary-dark rounded-lg flex items-center justify-center">
-                            <span className="text-white font-bold text-xl">E</span>
+                            <span className="text-white font-bold text-xl">AI</span>
                         </div>
-                        <span className="text-xl font-bold text-gray-900 hidden sm:block">ElectroShop</span>
+                        <span className="text-xl font-bold text-gray-900 hidden sm:block">AI Shop</span>
                     </Link>
 
                     {/* Search Bar */}
@@ -51,6 +85,23 @@ export default function Navbar() {
 
                     {/* Right Icons */}
                     <div className="flex items-center space-x-4">
+                        <Link href="/chat" className="hidden md:block text-sm font-medium text-gray-700 hover:text-primary transition-colors">
+                            Tư vấn AI
+                        </Link>
+                        
+                        {isLoggedIn && (
+                            <>
+                                <Link href="/orders" className="hidden md:block text-sm font-medium text-gray-700 hover:text-primary transition-colors">
+                                    Đơn hàng
+                                </Link>
+                                {(isAdmin || isManager) && (
+                                    <Link href="/admin" className="hidden md:block text-sm font-medium text-gray-700 hover:text-primary transition-colors">
+                                        {isAdmin ? 'Quản trị' : 'Quản lý'}
+                                    </Link>
+                                )}
+                            </>
+                        )}
+                        
                         <Link
                             href="/cart"
                             className="relative p-2 text-gray-700 hover:text-primary transition-colors"
@@ -63,12 +114,39 @@ export default function Navbar() {
                             )}
                         </Link>
 
-                        <Link
-                            href="/auth/login"
-                            className="p-2 text-gray-700 hover:text-primary transition-colors"
-                        >
-                            <User className="w-6 h-6" />
-                        </Link>
+                        {!isLoggedIn ? (
+                            <Link
+                                href="/auth/login"
+                                className="p-2 text-gray-700 hover:text-primary transition-colors"
+                                title="Đăng nhập"
+                            >
+                                <User className="w-6 h-6" />
+                            </Link>
+                        ) : (
+                            <div className="flex items-center space-x-2">
+                                <Link
+                                    href="/profile"
+                                    className="hidden md:block text-sm font-medium text-gray-700 hover:text-primary transition-colors"
+                                    title={userName}
+                                >
+                                    {userName}
+                                </Link>
+                                <Link
+                                    href="/profile"
+                                    className="p-2 text-gray-700 hover:text-primary transition-colors"
+                                    title="Tài khoản"
+                                >
+                                    <User className="w-6 h-6" />
+                                </Link>
+                                <button
+                                    onClick={handleLogout}
+                                    className="p-2 text-gray-700 hover:text-red-500 transition-colors"
+                                    title="Đăng xuất"
+                                >
+                                    <LogOut className="w-5 h-5" />
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -87,10 +165,16 @@ export default function Navbar() {
                             Laptop
                         </Link>
                         <Link href="/products?category=3" className="text-sm font-medium text-gray-700 hover:text-primary whitespace-nowrap transition-colors">
-                            Tai nghe
+                            Tablet
                         </Link>
                         <Link href="/products?category=4" className="text-sm font-medium text-gray-700 hover:text-primary whitespace-nowrap transition-colors">
                             Phụ kiện
+                        </Link>
+                        <Link href="/products?category=5" className="text-sm font-medium text-gray-700 hover:text-primary whitespace-nowrap transition-colors">
+                            Tai nghe
+                        </Link>
+                        <Link href="/products?category=6" className="text-sm font-medium text-gray-700 hover:text-primary whitespace-nowrap transition-colors">
+                            Đồng hồ
                         </Link>
                     </div>
                 </div>

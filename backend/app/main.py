@@ -146,14 +146,14 @@ async def debug_tables():
         # Get actual tables in database
         with engine.connect() as conn:
             # Get current database
-            result = conn.execute(text("SELECT current_database()"))
+            result = conn.execute(text("SELECT database()"))
             current_db = result.fetchone()[0]
             
             # Get all tables
-            result = conn.execute(text("""
+            result = conn.execute(text(f"""
                 SELECT table_name 
                 FROM information_schema.tables 
-                WHERE table_schema = 'public'
+                WHERE table_schema = '{DB_NAME}'
                 ORDER BY table_name
             """))
             actual_tables = [row[0] for row in result]
@@ -192,12 +192,22 @@ from app.routers import (
     san_pham_router,
     don_hang_router,
     chi_tiet_don_hang_router,
-    lich_su_chat_router
+    lich_su_chat_router,
+    admin_router
 )
+from app.routers.auth import router as auth_router
+from app.routers.chatbot import router as chatbot_router
+from app.routers.statistics import router as statistics_router
+from app.routers.danh_gia import router as danh_gia_router
 
+app.include_router(auth_router)
+app.include_router(chatbot_router)
+app.include_router(statistics_router)
 app.include_router(nguoi_dung_router)
 app.include_router(danh_muc_router)
 app.include_router(san_pham_router)
 app.include_router(don_hang_router)
 app.include_router(chi_tiet_don_hang_router)
 app.include_router(lich_su_chat_router)
+app.include_router(admin_router)
+app.include_router(danh_gia_router)

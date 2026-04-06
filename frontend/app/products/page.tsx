@@ -17,7 +17,7 @@ function ProductsContent() {
 
     // Filters
     const [selectedCategory, setSelectedCategory] = useState<string>('');
-    const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
+    const [priceRange, setPriceRange] = useState<[number, number]>([0, 50000000]);
     const [sortBy, setSortBy] = useState<string>('newest');
     const [searchQuery, setSearchQuery] = useState<string>('');
 
@@ -155,15 +155,15 @@ function ProductsContent() {
                                 <input
                                     type="range"
                                     min="0"
-                                    max="5000"
-                                    step="100"
+                                    max="50000000"
+                                    step="1000000"
                                     value={priceRange[1]}
                                     onChange={(e) => setPriceRange([0, parseInt(e.target.value)])}
                                     className="w-full"
                                 />
                                 <div className="flex items-center justify-between text-sm text-gray-600">
-                                    <span>${priceRange[0]}</span>
-                                    <span>${priceRange[1]}</span>
+                                    <span>{(priceRange[0] / 1000000).toFixed(0)}tr</span>
+                                    <span>{(priceRange[1] / 1000000).toFixed(0)}tr</span>
                                 </div>
                             </div>
                         </div>
@@ -187,7 +187,7 @@ function ProductsContent() {
                         <button
                             onClick={() => {
                                 setSelectedCategory('');
-                                setPriceRange([0, 5000]);
+                                setPriceRange([0, 50000000]);
                                 setSortBy('newest');
                                 setSearchQuery('');
                             }}

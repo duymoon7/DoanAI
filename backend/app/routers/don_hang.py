@@ -29,6 +29,11 @@ def create_order(order: DonHangCreate, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="Người dùng không tồn tại")
     
+    # Validate payment method
+    valid_methods = ['cod', 'bank']
+    if order.phuong_thuc_thanh_toan and order.phuong_thuc_thanh_toan not in valid_methods:
+        raise HTTPException(status_code=400, detail="Phương thức thanh toán không hợp lệ")
+    
     db_order = DonHang(**order.model_dump())
     db.add(db_order)
     db.commit()

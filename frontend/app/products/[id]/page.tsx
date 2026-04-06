@@ -138,18 +138,11 @@ export default function ProductDetailPage() {
                             <span className="text-4xl font-bold text-primary">
                                 {Number(product.gia).toLocaleString('vi-VN')}đ
                             </span>
-                            <span className="text-lg text-gray-500 line-through">
-                                {(Number(product.gia) * 1.2).toLocaleString('vi-VN')}đ
-                            </span>
-                            <span className="bg-accent text-white text-sm font-semibold px-3 py-1 rounded-full">
-                                -20%
-                            </span>
                         </div>
                     </div>
 
                     {/* Description */}
                     <div className="mb-6">
-                        <h2 className="font-semibold text-gray-900 mb-3">Mô tả sản phẩm</h2>
                         <p className="text-gray-600 leading-relaxed">{product.mo_ta}</p>
                     </div>
 
@@ -227,6 +220,153 @@ export default function ProductDetailPage() {
                         <button className="flex-1 btn-secondary flex items-center justify-center space-x-2">
                             <Share2 className="w-5 h-5" />
                             <span>Chia sẻ</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Reviews Section */}
+            <div className="mt-16">
+                <div className="border-t pt-8">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-6">Đánh giá sản phẩm</h2>
+                    
+                    {/* Review Summary */}
+                    <div className="bg-gray-50 rounded-xl p-6 mb-8">
+                        <div className="flex items-center gap-8">
+                            <div className="text-center">
+                                <div className="text-5xl font-bold text-gray-900 mb-2">4.0</div>
+                                <div className="flex items-center justify-center mb-2">
+                                    {[...Array(5)].map((_, i) => (
+                                        <Star
+                                            key={i}
+                                            className={`w-5 h-5 ${i < 4 ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+                                        />
+                                    ))}
+                                </div>
+                                <p className="text-sm text-gray-600">128 đánh giá</p>
+                            </div>
+                            <div className="flex-1">
+                                {[5, 4, 3, 2, 1].map((star) => (
+                                    <div key={star} className="flex items-center gap-3 mb-2">
+                                        <span className="text-sm text-gray-600 w-12">{star} sao</span>
+                                        <div className="flex-1 bg-gray-200 rounded-full h-2">
+                                            <div
+                                                className="bg-yellow-400 h-2 rounded-full"
+                                                style={{ width: `${star === 5 ? 60 : star === 4 ? 30 : 10}%` }}
+                                            />
+                                        </div>
+                                        <span className="text-sm text-gray-600 w-12 text-right">
+                                            {star === 5 ? 77 : star === 4 ? 38 : 13}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Write Review Button */}
+                    <button className="btn-primary mb-8">
+                        Viết đánh giá
+                    </button>
+
+                    {/* Reviews List */}
+                    <div className="space-y-6">
+                        {/* Sample Review 1 */}
+                        <div className="border-b pb-6">
+                            <div className="flex items-start gap-4">
+                                <div className="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center font-semibold">
+                                    N
+                                </div>
+                                <div className="flex-1">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div>
+                                            <h4 className="font-semibold text-gray-900">Nguyễn Văn A</h4>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <div className="flex">
+                                                    {[...Array(5)].map((_, i) => (
+                                                        <Star
+                                                            key={i}
+                                                            className="w-4 h-4 text-yellow-400 fill-yellow-400"
+                                                        />
+                                                    ))}
+                                                </div>
+                                                <span className="text-sm text-gray-500">2 ngày trước</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p className="text-gray-700 leading-relaxed">
+                                        Sản phẩm rất tốt, đáng tiền! Giao hàng nhanh, đóng gói cẩn thận. 
+                                        Chất lượng như mô tả, rất hài lòng với sản phẩm này.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Sample Review 2 */}
+                        <div className="border-b pb-6">
+                            <div className="flex items-start gap-4">
+                                <div className="w-12 h-12 bg-accent text-white rounded-full flex items-center justify-center font-semibold">
+                                    T
+                                </div>
+                                <div className="flex-1">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div>
+                                            <h4 className="font-semibold text-gray-900">Trần Thị B</h4>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <div className="flex">
+                                                    {[...Array(5)].map((_, i) => (
+                                                        <Star
+                                                            key={i}
+                                                            className={`w-4 h-4 ${i < 4 ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+                                                        />
+                                                    ))}
+                                                </div>
+                                                <span className="text-sm text-gray-500">5 ngày trước</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p className="text-gray-700 leading-relaxed">
+                                        Chất lượng ổn, giao hàng nhanh. Sản phẩm đúng như mô tả.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Sample Review 3 */}
+                        <div className="border-b pb-6">
+                            <div className="flex items-start gap-4">
+                                <div className="w-12 h-12 bg-green-500 text-white rounded-full flex items-center justify-center font-semibold">
+                                    L
+                                </div>
+                                <div className="flex-1">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div>
+                                            <h4 className="font-semibold text-gray-900">Lê Văn C</h4>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <div className="flex">
+                                                    {[...Array(5)].map((_, i) => (
+                                                        <Star
+                                                            key={i}
+                                                            className="w-4 h-4 text-yellow-400 fill-yellow-400"
+                                                        />
+                                                    ))}
+                                                </div>
+                                                <span className="text-sm text-gray-500">1 tuần trước</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p className="text-gray-700 leading-relaxed">
+                                        Tuyệt vời, sẽ mua lại lần sau. Shop phục vụ nhiệt tình!
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Load More */}
+                    <div className="text-center mt-8">
+                        <button className="btn-secondary">
+                            Xem thêm đánh giá
                         </button>
                     </div>
                 </div>

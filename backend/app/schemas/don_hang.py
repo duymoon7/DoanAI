@@ -7,6 +7,7 @@ class DonHangBase(BaseModel):
     nguoi_dung_id: int
     tong_tien: Decimal
     trang_thai: Optional[str] = "pending"
+    phuong_thuc_thanh_toan: Optional[str] = "cod"
 
 class DonHangCreate(DonHangBase):
     pass
@@ -14,6 +15,7 @@ class DonHangCreate(DonHangBase):
 class DonHangUpdate(BaseModel):
     tong_tien: Optional[Decimal] = None
     trang_thai: Optional[str] = None
+    phuong_thuc_thanh_toan: Optional[str] = None
 
 class DonHangResponse(DonHangBase):
     id: int

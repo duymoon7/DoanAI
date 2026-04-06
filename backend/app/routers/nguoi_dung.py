@@ -42,6 +42,10 @@ def update_user(user_id: int, user: NguoiDungUpdate, db: Session = Depends(get_d
     if not db_user:
         raise HTTPException(status_code=404, detail="Người dùng không tồn tại")
     
+    # Không cho phép thay đổi vai trò của Admin
+    if db_user.vai_tro == "admin" and user.vai_tro and user.vai_tro != "admin":
+        raise HTTPException(status_code=403, detail="Không thể thay đổi vai trò của Quản trị viên")
+    
     update_data = user.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(db_user, field, value)
@@ -56,6 +60,10 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     db_user = db.query(NguoiDung).filter(NguoiDung.id == user_id).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="Người dùng không tồn tại")
+    
+    # Không cho phép xóa Admin
+    if db_user.vai_tro == "admin":
+        raise HTTPException(status_code=403, detail="Không thể xóa tài khoản Quản trị viên")
     
     db.delete(db_user)
     db.commit()

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, ForeignKey, Numeric, String, DateTime, Enum
+from sqlalchemy import Column, Integer, ForeignKey, Numeric, String, DateTime
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
@@ -13,13 +13,20 @@ class TrangThai(str, enum.Enum):
     CANCELLED = "cancelled"
 
 
+class PhuongThucThanhToan(str, enum.Enum):
+    """Enum cho phuong thuc thanh toan"""
+    COD = "cod"
+    BANK = "bank"
+
+
 class DonHang(BaseModel):
     """Model cho bang don_hang"""
     __tablename__ = "don_hang"
     
     nguoi_dung_id = Column(Integer, ForeignKey("nguoi_dung.id"), nullable=False)
     tong_tien = Column(Numeric(10, 2), nullable=False)
-    trang_thai = Column(Enum(TrangThai), default=TrangThai.PENDING, nullable=False)
+    trang_thai = Column(String(20), default="pending", nullable=False)
+    phuong_thuc_thanh_toan = Column(String(20), default="cod", nullable=False)
     ngay_tao = Column(DateTime, default=datetime.utcnow, nullable=False)
     
     # Relationships

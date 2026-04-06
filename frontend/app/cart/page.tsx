@@ -3,10 +3,77 @@
 import { useCart } from '@/contexts/CartContext';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, CreditCard, Truck } from 'lucide-react';
+import { useState } from 'react';
+import { createOrder, createOrderItem } from '@/lib/api';
+import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 export default function CartPage() {
     const { cart, removeFromCart, updateQuantity, getTotalPrice, clearCart } = useCart();
+    const [paymentMethod, setPaymentMethod] = useState<'cod' | 'bank'>('cod');
+    const [isProcessing, setIsProcessing] = useState(false);
+    const router = useRouter();
+
+    const handleCheckout = async () => {
+        // Check if user is logged in
+        const userStr = localStorage.getItem('user');
+        if (!userStr) {
+            toast.error('Vui lòng đăng nhập để đặt hàng');
+            router.push('/auth/login');
+            return;
+        }
+
+        const user = JSON.parse(userStr);
+        setIsProcessing(true);
+
+        try {
+            // Create order
+            const orderData = {
+                nguoi_dung_id: user.id,
+                tong_tien: getTotalPrice(),
+                trang_thai: 'pending',
+                phuong_thuc_thanh_toan: paymentMethod,
+            };
+
+            console.log('Creating order with data:', orderData);
+            const order = await createOrder(orderData);
+            console.log('Order created:', order);
+
+            // Create order items
+            for (const item of cart) {
+                const itemData = {
+                    don_hang_id: order.id,
+                    san_pham_id: item.product.id,
+                    so_luong: item.quantity,
+                    gia: Number(item.product.gia),
+                };
+                console.log('Creating order item:', itemData);
+                await createOrderItem(itemData);
+            }
+
+            // Clear cart
+            clearCart();
+            toast.success('Đặt hàng thành công!');
+            router.push('/orders');
+        } catch (error: any) {
+            console.error('Error creating order:', error);
+            
+            // More detailed error message
+            if (error.response) {
+                // Server responded with error
+                toast.error(`Lỗi: ${error.response.data.detail || 'Đặt hàng thất bại'}`);
+            } else if (error.request) {
+                // Request made but no response
+                toast.error('Không thể kết nối đến server. Vui lòng kiểm tra backend đã chạy chưa!');
+            } else {
+                // Something else happened
+                toast.error('Đặt hàng thất bại. Vui lòng thử lại!');
+            }
+        } finally {
+            setIsProcessing(false);
+        }
+    };
 
     if (cart.length === 0) {
         return (
@@ -58,6 +125,7 @@ export default function CartPage() {
                                         src={item.product.hinh_anh || '/placeholder.png'}
                                         alt={item.product.ten}
                                         fill
+                                        sizes="96px"
                                         className="object-cover"
                                     />
                                 </div>
@@ -160,6 +228,73 @@ export default function CartPage() {
                             </div>
                         </div>
 
+                        {/* Payment Method */}
+                        <div className="mb-6">
+                            <label className="block text-sm font-medium text-gray-700 mb-3">
+                                Phương thức thanh toán
+                            </label>
+                            <div className="space-y-3">
+                                {/* COD Option */}
+                                <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                                    paymentMethod === 'cod' 
+                                        ? 'border-primary bg-primary/5' 
+                                        : 'border-gray-200 hover:border-gray-300'
+                                }`}>
+                                    <input
+                                        type="radio"
+                                        name="payment"
+                                        value="cod"
+                                        checked={paymentMethod === 'cod'}
+                                        onChange={(e) => setPaymentMethod(e.target.value as 'cod' | 'bank')}
+                                        className="w-4 h-4 text-primary"
+                                    />
+                                    <div className="ml-3 flex items-center flex-1">
+                                        <Truck className="w-5 h-5 text-primary mr-2" />
+                                        <div>
+                                            <p className="font-medium text-gray-900">Ship COD</p>
+                                            <p className="text-xs text-gray-500">Thanh toán khi nhận hàng</p>
+                                        </div>
+                                    </div>
+                                </label>
+
+                                {/* Bank Option */}
+                                <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                                    paymentMethod === 'bank' 
+                                        ? 'border-primary bg-primary/5' 
+                                        : 'border-gray-200 hover:border-gray-300'
+                                }`}>
+                                    <input
+                                        type="radio"
+                                        name="payment"
+                                        value="bank"
+                                        checked={paymentMethod === 'bank'}
+                                        onChange={(e) => setPaymentMethod(e.target.value as 'cod' | 'bank')}
+                                        className="w-4 h-4 text-primary"
+                                    />
+                                    <div className="ml-3 flex items-center flex-1">
+                                        <CreditCard className="w-5 h-5 text-primary mr-2" />
+                                        <div>
+                                            <p className="font-medium text-gray-900">Chuyển khoản ngân hàng</p>
+                                            <p className="text-xs text-gray-500">Thanh toán qua ngân hàng</p>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* Bank Info (show when bank is selected) */}
+                        {paymentMethod === 'bank' && (
+                            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                <p className="text-sm font-medium text-gray-900 mb-2">Thông tin chuyển khoản:</p>
+                                <div className="text-sm text-gray-700 space-y-1">
+                                    <p><span className="font-medium">Ngân hàng:</span> Vietcombank</p>
+                                    <p><span className="font-medium">Số tài khoản:</span> 1234567890</p>
+                                    <p><span className="font-medium">Chủ tài khoản:</span> AI Shop</p>
+                                    <p><span className="font-medium">Nội dung:</span> [Họ tên] - [Số điện thoại]</p>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Promo Code */}
                         <div className="mb-6">
                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -178,8 +313,12 @@ export default function CartPage() {
                         </div>
 
                         {/* Checkout Button */}
-                        <button className="w-full btn-primary mb-4">
-                            Thanh toán
+                        <button 
+                            onClick={handleCheckout}
+                            disabled={isProcessing}
+                            className="w-full btn-primary mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isProcessing ? 'Đang xử lý...' : (paymentMethod === 'cod' ? 'Đặt hàng' : 'Xác nhận thanh toán')}
                         </button>
 
                         {/* Continue Shopping */}

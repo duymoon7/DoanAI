@@ -1,0 +1,102 @@
+// Database Schema for Electronics E-Commerce System
+// Use this file at https://dbdiagram.io/
+
+Project electronics_shop {
+  database_type: 'MySQL'
+  Note: 'Electronics E-Commerce Database Schema'
+}
+
+// Users Table
+Table nguoi_dung {
+  id int [pk, increment, note: 'Primary Key']
+  email varchar(255) [unique, not null, note: 'User email']
+  mat_khau varchar(255) [not null, note: 'Hashed password']
+  ho_ten varchar(255) [null, note: 'Full name']
+  vai_tro varchar(20) [not null, default: 'user', note: 'Role: admin or user']
+  ngay_tao datetime [not null, default: `now()`, note: 'Created date']
+  
+  indexes {
+    email [unique]
+  }
+  
+  Note: 'User accounts table'
+}
+
+// Categories Table
+Table danh_muc {
+  id int [pk, increment, note: 'Primary Key']
+  ten varchar(255) [not null, note: 'Category name']
+  
+  Note: 'Product categories'
+}
+
+// Products Table
+Table san_pham {
+  id int [pk, increment, note: 'Primary Key']
+  ten varchar(255) [not null, note: 'Product name']
+  mo_ta text [null, note: 'Product description']
+  gia decimal(10,2) [not null, note: 'Product price']
+  hinh_anh varchar(500) [null, note: 'Product image URL']
+  danh_muc_id int [not null, ref: > danh_muc.id, note: 'Category ID']
+  
+  indexes {
+    danh_muc_id
+  }
+  
+  Note: 'Products table'
+}
+
+// Orders Table
+Table don_hang {
+  id int [pk, increment, note: 'Primary Key']
+  nguoi_dung_id int [not null, ref: > nguoi_dung.id, note: 'User ID']
+  tong_tien decimal(10,2) [not null, note: 'Total amount']
+  trang_thai varchar(50) [not null, default: 'pending', note: 'Order status: pending, completed, cancelled']
+  ngay_tao datetime [not null, default: `now()`, note: 'Created date']
+  
+  indexes {
+    nguoi_dung_id
+    trang_thai
+  }
+  
+  Note: 'Orders table'
+}
+
+// Order Details Table
+Table chi_tiet_don_hang {
+  id int [pk, increment, note: 'Primary Key']
+  don_hang_id int [not null, ref: > don_hang.id, note: 'Order ID']
+  san_pham_id int [not null, ref: > san_pham.id, note: 'Product ID']
+  so_luong int [not null, note: 'Quantity']
+  gia decimal(10,2) [not null, note: 'Price at time of order']
+  
+  indexes {
+    don_hang_id
+    san_pham_id
+  }
+  
+  Note: 'Order details table'
+}
+
+// Chat History Table
+Table lich_su_chat {
+  id int [pk, increment, note: 'Primary Key']
+  nguoi_dung_id int [null, ref: > nguoi_dung.id, note: 'User ID (nullable for guests)']
+  tin_nhan text [not null, note: 'User message']
+  phan_hoi text [null, note: 'AI response']
+  ngay_tao datetime [not null, default: `now()`, note: 'Created date']
+  
+  indexes {
+    nguoi_dung_id
+  }
+  
+  Note: 'AI chatbot conversation history'
+}
+
+// Relationships Documentation
+// One-to-Many Relationships:
+// - danh_muc (1) -> san_pham (N)
+// - nguoi_dung (1) -> don_hang (N)
+// - nguoi_dung (1) -> lich_su_chat (N)
+// - don_hang (1) -> chi_tiet_don_hang (N)
+// - san_pham (1) -> chi_tiet_don_hang (N)

@@ -26,6 +26,7 @@ export interface Order {
     nguoi_dung_id: number;
     tong_tien: number;
     trang_thai: 'pending' | 'completed' | 'cancelled';
+    phuong_thuc_thanh_toan: 'cod' | 'bank';
     ngay_tao: string;
 }
 

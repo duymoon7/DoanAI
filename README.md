@@ -1,383 +1,305 @@
-# 🛒 ElectroShop - E-Commerce Platform
+# 🛒 AI-Shop - E-Commerce Platform
 
-Modern, full-stack e-commerce platform for electronics with clean UI and professional design.
+Hệ thống thương mại điện tử bán thiết bị điện tử với tích hợp AI chatbot.
 
 ---
 
-## 🚀 QUICK START
+## 🚀 HƯỚNG DẪN CHẠY CODE
 
-### Mới clone về? Đọc ngay:
-- **[GETTING_STARTED.md](GETTING_STARTED.md)** ⭐ - Bắt đầu nhanh (3 bước)
-- **[HUONG_DAN_CAI_DAT.md](HUONG_DAN_CAI_DAT.md)** 📖 - Hướng dẫn chi tiết từ A-Z
+### Bước 1: Chuẩn Bị Database
 
-### Đã cài đặt rồi?
+1. Mở **XAMPP** và khởi động **MySQL**
+2. Truy cập **phpMyAdmin**: http://localhost/phpmyadmin
+3. Tạo database mới tên: `electronics_db`
+
+### Bước 2: Chạy Backend (FastAPI)
+
+Mở terminal và chạy:
+
 ```bash
-# Terminal 1: Backend
-docker-compose up -d
+# Di chuyển vào thư mục backend
+cd backend
 
-# Terminal 2: Frontend
+# Cài đặt dependencies (chỉ lần đầu tiên)
+pip install -r requirements.txt
+
+# Chạy server
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+✅ Backend chạy tại: **http://localhost:8000**  
+📚 API Documentation: **http://localhost:8000/docs**
+
+### Bước 3: Chạy Frontend (Next.js)
+
+Mở terminal mới và chạy:
+
+```bash
+# Di chuyển vào thư mục frontend
 cd frontend
+
+# Cài đặt dependencies (chỉ lần đầu tiên)
+npm install
+
+# Chạy development server
 npm run dev
 ```
 
-Truy cập: http://localhost:3000
+✅ Frontend chạy tại: **http://localhost:3000**
 
 ---
 
 ## 🎯 Tech Stack
 
 ### Backend
-- **FastAPI** - Modern Python web framework
-- **PostgreSQL** - Relational database
+- **FastAPI** - Python web framework
 - **SQLAlchemy** - ORM
-- **Docker** - Containerization
+- **MySQL** - Database (XAMPP)
+- **OpenAI API** - AI Chatbot
 
 ### Frontend
-- **Next.js 14** - React framework with App Router
+- **Next.js 16** - React framework
+- **React 19** - UI library
 - **TypeScript** - Type safety
-- **Tailwind CSS** - Utility-first CSS
+- **Tailwind CSS** - Styling
 - **Axios** - HTTP client
 
 ---
 
-## 🚀 Quick Start
+## � Features
 
-### Option 1: Docker (Recommended)
-
-**Prerequisites:**
-- Docker Desktop installed and running
-
-**Steps:**
-```bash
-# 1. Start Docker environment
-docker-compose up --build
-
-# 2. Start frontend (new terminal)
-cd frontend
-npm run dev
-```
-
-**Access:**
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8000
-- API Docs: http://localhost:8000/docs
-- pgAdmin: http://localhost:5050
-
-### Option 2: Local Development
-
-**Prerequisites:**
-- Python 3.8+
-- Node.js 18+
-- PostgreSQL 12+
-
-**Backend:**
-```bash
-cd backend
-pip install -r requirements.txt
-python run.py
-```
-
-**Frontend:**
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
----
-
-## 📊 Features
-
-### Frontend
-- ✅ Clean, minimalist UI (Amazon + Shopee inspired)
-- ✅ Product listing with filters and sorting
-- ✅ Product detail pages
-- ✅ Shopping cart with localStorage
-- ✅ Responsive design (mobile-first)
-- ✅ Loading skeletons
-- ✅ Toast notifications
-- ✅ Search functionality
-- ✅ Authentication pages
-
-### Backend
-- ✅ RESTful API with FastAPI
-- ✅ 6 database models (Users, Categories, Products, Orders, Order Items, Chat)
-- ✅ CRUD operations
-- ✅ Auto table creation
-- ✅ Sample data seeding
-- ✅ API documentation (Swagger)
-- ✅ CORS configuration
-- ✅ Health checks
+- 🛍️ Quản lý sản phẩm và danh mục
+- 👤 Quản lý người dùng và đơn hàng
+- 🛒 Giỏ hàng với localStorage
+- 🤖 AI Chatbot hỗ trợ khách hàng
+- 📊 Admin dashboard
+- 🔐 Authentication & Authorization
+- 📱 Responsive design
 
 ---
 
 ## 🗄️ Database Schema
 
-### Tables (6)
-1. **nguoi_dung** - Users (admin/user roles)
-2. **danh_muc** - Categories
-3. **san_pham** - Products
-4. **don_hang** - Orders
-5. **chi_tiet_don_hang** - Order items
-6. **lich_su_chat** - Chat history
-
-### Sample Data
-- 4 categories (Phones, Laptops, Headphones, Accessories)
-- 10 products (iPhone, Samsung, MacBook, etc.)
-- 3 users (1 admin, 2 regular users)
-- 3 sample orders
+### 6 Tables
+1. **nguoi_dung** - Người dùng (admin/user)
+2. **danh_muc** - Danh mục sản phẩm
+3. **san_pham** - Sản phẩm
+4. **don_hang** - Đơn hàng
+5. **chi_tiet_don_hang** - Chi tiết đơn hàng
+6. **lich_su_chat** - Lịch sử chat với AI
 
 ---
 
-## 📁 Project Structure
+## � API Endpoints
+
+Base URL: `http://localhost:8000/api`
+
+### Sản Phẩm
+- `GET /api/san-pham` - Lấy danh sách sản phẩm
+- `GET /api/san-pham/{id}` - Chi tiết sản phẩm
+- `POST /api/san-pham` - Tạo sản phẩm mới
+- `PUT /api/san-pham/{id}` - Cập nhật sản phẩm
+- `DELETE /api/san-pham/{id}` - Xóa sản phẩm
+
+### Danh Mục
+- `GET /api/danh-muc` - Lấy danh sách danh mục
+- `GET /api/danh-muc/{id}` - Chi tiết danh mục
+- `POST /api/danh-muc` - Tạo danh mục mới
+
+### Người Dùng
+- `GET /api/nguoi-dung` - Lấy danh sách người dùng
+- `POST /api/nguoi-dung` - Tạo người dùng mới
+
+### Đơn Hàng
+- `GET /api/don-hang` - Lấy danh sách đơn hàng
+- `POST /api/don-hang` - Tạo đơn hàng mới
+
+📚 **Xem đầy đủ tại:** http://localhost:8000/docs
+
+---
+
+## 📁 Cấu Trúc Thư Mục
 
 ```
-doanAi/
-├── backend/
+AI-Shop/
+├── backend/              # FastAPI backend
 │   ├── app/
-│   │   ├── models/          # SQLAlchemy models
-│   │   ├── routers/         # API endpoints
-│   │   ├── schemas/         # Pydantic schemas
-│   │   ├── database.py      # DB configuration
-│   │   └── main.py          # FastAPI app
-│   ├── Dockerfile
+│   │   ├── models/      # Database models (SQLAlchemy)
+│   │   ├── routers/     # API endpoints
+│   │   ├── schemas/     # Pydantic schemas
+│   │   ├── database.py  # Database configuration
+│   │   └── main.py      # FastAPI application
 │   ├── requirements.txt
-│   └── seed_docker.py       # Auto-seed script
-├── frontend/
-│   ├── app/                 # Next.js pages
-│   ├── components/          # React components
-│   ├── contexts/            # State management
-│   ├── lib/                 # API & types
-│   └── public/              # Static files
-├── docker-compose.yml
+│   ├── seed_initial_data.py
+│   └── reset_db.py
+├── frontend/            # Next.js frontend
+│   ├── app/            # Pages & routes (App Router)
+│   │   ├── admin/      # Admin pages
+│   │   ├── auth/       # Login/Register
+│   │   ├── cart/       # Shopping cart
+│   │   ├── chat/       # AI Chatbot
+│   │   ├── orders/     # Order history
+│   │   ├── products/   # Product pages
+│   │   └── profile/    # User profile
+│   ├── components/     # React components
+│   ├── contexts/       # Context API (Cart)
+│   ├── lib/           # API client & types
+│   └── package.json
+├── .env               # Environment variables
+├── .gitignore
 └── README.md
 ```
 
 ---
 
-## 🔌 API Endpoints
+## ⚙️ Cấu Hình
 
-Base URL: `http://localhost:8000/api`
+### File .env (Backend)
+```env
+# MySQL Database Configuration
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=electronics_db
+DB_USER=root
+DB_PASSWORD=
 
-| Endpoint | Methods | Description |
-|----------|---------|-------------|
-| `/san-pham` | GET, POST, PUT, DELETE | Products |
-| `/danh-muc` | GET, POST, PUT, DELETE | Categories |
-| `/don-hang` | GET, POST, PUT, DELETE | Orders |
-| `/nguoi-dung` | GET, POST, PUT, DELETE | Users |
-| `/chi-tiet-don-hang` | GET, POST | Order Items |
-| `/lich-su-chat` | GET, POST | Chat History |
+# Backend Configuration
+APP_ENV=development
+DEBUG=True
+```
 
-**Documentation:** http://localhost:8000/docs
-
----
-
-## 🐳 Docker Services
-
-### PostgreSQL
-- Port: 5432
-- User: `postgres`
-- Password: `123456`
-- Database: `electronics_db`
-
-### pgAdmin
-- Port: 5050
-- Email: `admin@admin.com`
-- Password: `admin`
-
-### Backend
-- Port: 8000
-- Auto-reload enabled
-- Health checks configured
+### File lib/api.ts (Frontend)
+```typescript
+const API_BASE_URL = 'http://localhost:8000/api';
+```
 
 ---
 
-## 📚 Documentation
+## 🔍 Kiểm Tra Hệ Thống
 
-- **[START_DOCKER.md](START_DOCKER.md)** - Quick start with Docker
-- **[DOCKER_SETUP.md](DOCKER_SETUP.md)** - Complete Docker guide
-- **[SETUP_GUIDE.md](SETUP_GUIDE.md)** - Local development setup
-- **[backend/API_GUIDE.md](backend/API_GUIDE.md)** - API testing guide
-- **[backend/README.md](backend/README.md)** - Backend documentation
-- **[frontend/README.md](frontend/README.md)** - Frontend documentation
+Sau khi chạy, kiểm tra các URL sau:
+
+- ✅ Backend Health: http://localhost:8000/health
+- ✅ API Docs: http://localhost:8000/docs
+- ✅ Frontend: http://localhost:3000
+- ✅ phpMyAdmin: http://localhost/phpmyadmin
 
 ---
 
-## 🛠️ Development
+## � Troubleshooting
 
-### Backend Development
+### Backend không kết nối được database
+```bash
+# Kiểm tra:
+1. XAMPP MySQL đã chạy chưa?
+2. Database 'electronics_db' đã tạo chưa?
+3. File .env có đúng thông tin không?
+```
+
+### Frontend không gọi được API
+```bash
+# Kiểm tra:
+1. Backend đã chạy tại port 8000 chưa?
+2. Truy cập http://localhost:8000/health
+3. Kiểm tra CORS trong backend/app/main.py
+```
+
+### Port đã được sử dụng
+```bash
+# Backend (port 8000)
+netstat -ano | findstr :8000
+taskkill /PID <PID> /F
+
+# Frontend (port 3000)
+netstat -ano | findstr :3000
+taskkill /PID <PID> /F
+```
+
+---
+
+## 🔄 Reset Database
+
+Nếu cần reset database và tạo lại dữ liệu mẫu:
 
 ```bash
 cd backend
-
-# Run locally
-python run.py
-
-# Run tests
-python test_connection.py
-
-# Seed data
-python seed_docker.py
+python reset_db.py
 ```
 
-### Frontend Development
+---
+
+## � Lệnh Thường Dùng
 
 ```bash
-cd frontend
-
-# Development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Start production server
-npm start
-```
-
-### Docker Development
-
-```bash
-# Start all services
-docker-compose up
-
-# Rebuild backend
-docker-compose up --build backend
-
-# View logs
-docker-compose logs -f backend
-
-# Restart service
-docker-compose restart backend
-
-# Stop all
-docker-compose down
-```
-
----
-
-## 🎨 Design System
-
-### Colors
-- **Primary**: #0ea5e9 (Sky Blue)
-- **Accent**: #fb923c (Orange)
-- **Background**: #f9fafb (Gray 50)
-
-### Components
-- Clean, minimalist cards
-- Smooth hover effects
-- Soft shadows
-- Rounded corners
-- Professional typography
-
----
-
-## 🔐 Environment Variables
-
-### Backend (.env)
-```env
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=electronics_db
-DB_USER=postgres
-DB_PASSWORD=123456
-```
-
-### Frontend (.env.local)
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8000/api
-```
-
----
-
-## 🐛 Troubleshooting
-
-### Docker not starting
-- Ensure Docker Desktop is running
-- Check ports 5432, 5050, 8000 are available
-- View logs: `docker-compose logs`
-
-### Backend connection error
-- Verify PostgreSQL is running
-- Check database credentials
-- Wait for database to be ready (10-20 seconds)
-
-### Frontend can't connect to API
-- Ensure backend is running on port 8000
-- Check CORS configuration
-- Verify API URL in .env.local
-
----
-
-## 📝 Common Commands
-
-```bash
-# Docker
-docker-compose up -d              # Start in background
-docker-compose down               # Stop services
-docker-compose down -v            # Stop and remove data
-docker-compose logs -f backend    # View backend logs
-docker-compose restart backend    # Restart backend
-
 # Backend
-cd backend && python run.py       # Start backend
-cd backend && python seed_docker.py  # Seed data
+cd backend
+pip install -r requirements.txt          # Cài dependencies
+uvicorn app.main:app --reload            # Chạy server
+python reset_db.py                       # Reset database
+python seed_initial_data.py              # Seed dữ liệu mẫu
 
 # Frontend
-cd frontend && npm run dev        # Start frontend
-cd frontend && npm run build      # Build frontend
+cd frontend
+npm install                              # Cài dependencies
+npm run dev                              # Chạy dev server
+npm run build                            # Build production
+npm start                                # Chạy production server
 ```
 
 ---
 
-## ✅ Success Checklist
+## 📚 Tài Liệu
 
-After setup, verify:
+### Bắt đầu
+- [QUICK_START.md](QUICK_START.md) - ⚡ Khởi động nhanh trong 3 bước
+- [README.md](README.md) - 📖 Hướng dẫn đầy đủ (file này)
 
-- [ ] Docker containers running: `docker-compose ps`
-- [ ] Backend health: http://localhost:8000/health
-- [ ] API docs: http://localhost:8000/docs
-- [ ] pgAdmin: http://localhost:5050
-- [ ] Database has 6 tables
-- [ ] Sample data loaded (10 products)
-- [ ] Frontend: http://localhost:3000
-- [ ] Can browse products
-- [ ] Can add to cart
-- [ ] Cart persists on refresh
+### Quản trị
+- [ADMIN_GUIDE.md](ADMIN_GUIDE.md) - 🔐 Hướng dẫn tài khoản Admin
+- [SCRIPTS.md](SCRIPTS.md) - 🛠️ Tổng hợp scripts hữu ích
 
----
+### Khắc phục sự cố
+- [FIX_LOGIN.md](FIX_LOGIN.md) - 🔧 Fix lỗi đăng nhập
 
-## 🎯 Next Steps
-
-- [ ] Implement JWT authentication
-- [ ] Add payment integration
-- [ ] User profile management
-- [ ] Order tracking
-- [ ] Product reviews
-- [ ] Wishlist feature
-- [ ] Email notifications
-- [ ] Admin dashboard
-- [ ] Analytics
-- [ ] Deploy to production
+### Tham khảo
+- [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) - 📁 Cấu trúc project
+- [backend/API_COMPLETE.md](backend/API_COMPLETE.md) - 🌐 API documentation
 
 ---
 
-## 📄 License
+## � Yêu Cầu Hệ Thống
 
-MIT License - feel free to use for your projects!
-
----
-
-## 🤝 Contributing
-
-Contributions welcome! Please feel free to submit a Pull Request.
+- **Python**: 3.11+
+- **Node.js**: 18+
+- **MySQL**: 5.7+ (XAMPP)
+- **RAM**: 4GB+
+- **OS**: Windows/Mac/Linux
 
 ---
 
-## 📧 Contact
+## ✅ Checklist Sau Khi Setup
 
-For questions or support, please open an issue.
+- [ ] XAMPP MySQL đang chạy
+- [ ] Database `electronics_db` đã tạo
+- [ ] Backend chạy tại http://localhost:8000
+- [ ] API docs mở được: http://localhost:8000/docs
+- [ ] Database có 6 tables
+- [ ] Frontend chạy tại http://localhost:3000
+- [ ] Có thể xem danh sách sản phẩm
+- [ ] Có thể thêm sản phẩm vào giỏ hàng
+- [ ] Giỏ hàng lưu được khi refresh
 
 ---
 
-**🎉 Happy coding!**
+## 🎉 Bắt Đầu Phát Triển
+
+Hệ thống đã sẵn sàng! Bạn có thể:
+
+1. Xem danh sách sản phẩm tại trang chủ
+2. Thêm sản phẩm vào giỏ hàng
+3. Chat với AI chatbot
+4. Đăng ký/Đăng nhập
+5. Xem API documentation
+6. Bắt đầu customize theo ý muốn
+
+**Happy Coding! 🚀**

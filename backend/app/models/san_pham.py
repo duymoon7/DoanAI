@@ -19,6 +19,7 @@ class SanPham(BaseModel):
     # Relationships
     danh_muc = relationship("DanhMuc", back_populates="san_pham")
     chi_tiet_don_hang = relationship("ChiTietDonHang", back_populates="san_pham")
+    danh_gia = relationship("DanhGia", back_populates="san_pham", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<SanPham(id={self.id}, ten={self.ten}, gia={self.gia})>"
