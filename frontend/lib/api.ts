@@ -12,8 +12,31 @@ const api = axios.create({
 });
 
 // Products
-export const getProducts = async (skip = 0, limit = 100): Promise<Product[]> => {
-    const response = await api.get(`/san-pham?skip=${skip}&limit=${limit}`);
+export const getProducts = async (params?: {
+    skip?: number;
+    limit?: number;
+    search?: string;
+    danh_muc_id?: number;
+    min_price?: number;
+    max_price?: number;
+    sort_by?: string;
+    order?: string;
+}): Promise<Product[]> => {
+    const queryParams = new URLSearchParams();
+    
+    if (params?.skip !== undefined) queryParams.append('skip', params.skip.toString());
+    if (params?.limit !== undefined) queryParams.append('limit', params.limit.toString());
+    if (params?.search) queryParams.append('search', params.search);
+    if (params?.danh_muc_id) queryParams.append('danh_muc_id', params.danh_muc_id.toString());
+    if (params?.min_price !== undefined) queryParams.append('min_price', params.min_price.toString());
+    if (params?.max_price !== undefined) queryParams.append('max_price', params.max_price.toString());
+    if (params?.sort_by) queryParams.append('sort_by', params.sort_by);
+    if (params?.order) queryParams.append('order', params.order);
+    
+    const queryString = queryParams.toString();
+    const url = queryString ? `/san-pham?${queryString}` : '/san-pham';
+    
+    const response = await api.get(url);
     return response.data;
 };
 
@@ -81,11 +104,35 @@ export const getOrderItems = async (orderId: number) => {
     return response.data;
 };
 
+// Reviews
+export const getReviews = async (productId: number, skip = 0, limit = 10) => {
+    const response = await api.get(`/danh-gia?san_pham_id=${productId}&skip=${skip}&limit=${limit}`);
+    return response.data;
+};
+
+export const getReviewStats = async (productId: number) => {
+    const response = await api.get(`/danh-gia/stats/${productId}`);
+    return response.data;
+};
+
+export const createReview = async (data: {
+    san_pham_id: number;
+    diem_so: number;
+    binh_luan?: string;
+}, token: string) => {
+    const response = await api.post('/danh-gia', data, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return response.data;
+};
+
 export default api;
 
 
 // Authentication (using Next.js API routes to avoid CORS)
-export const register = async (data: { email: string; mat_khau: string; ho_ten: string }) => {
+export const register = async (data: { email: string; mat_khau: string; ho_ten: string; so_dien_thoai?: string }) => {
     const response = await axios.post('/api/auth/register', data, {
         headers: {
             'Content-Type': 'application/json',

@@ -5,6 +5,7 @@ from .don_hang import DonHang
 from .chi_tiet_don_hang import ChiTietDonHang
 from .lich_su_chat import LichSuChat
 from .danh_gia import DanhGia
+from .ma_giam_gia import MaGiamGia
 
 __all__ = [
     "NguoiDung",
@@ -14,4 +15,5 @@ __all__ = [
     "ChiTietDonHang",
     "LichSuChat",
     "DanhGia",
+    "MaGiamGia",
 ]

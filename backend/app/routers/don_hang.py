@@ -1,22 +1,28 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List
 from app.database import get_db
-from app.models import DonHang, NguoiDung
+from app.models import DonHang, NguoiDung, ChiTietDonHang
 from app.schemas import DonHangCreate, DonHangUpdate, DonHangResponse
 
 router = APIRouter(prefix="/api/don-hang", tags=["Đơn hàng"])
 
 @router.get("/", response_model=List[DonHangResponse])
 def get_all_orders(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    """Lấy danh sách tất cả đơn hàng"""
-    orders = db.query(DonHang).offset(skip).limit(limit).all()
+    """Lấy danh sách tất cả đơn hàng với thông tin người đặt và chi tiết đơn hàng"""
+    orders = db.query(DonHang).options(
+        joinedload(DonHang.nguoi_dung),
+        joinedload(DonHang.chi_tiet_don_hang).joinedload(ChiTietDonHang.san_pham)
+    ).offset(skip).limit(limit).all()
     return orders
 
 @router.get("/{order_id}", response_model=DonHangResponse)
 def get_order(order_id: int, db: Session = Depends(get_db)):
-    """Lấy thông tin đơn hàng theo ID"""
-    order = db.query(DonHang).filter(DonHang.id == order_id).first()
+    """Lấy thông tin đơn hàng theo ID với thông tin người đặt và chi tiết đơn hàng"""
+    order = db.query(DonHang).options(
+        joinedload(DonHang.nguoi_dung),
+        joinedload(DonHang.chi_tiet_don_hang).joinedload(ChiTietDonHang.san_pham)
+    ).filter(DonHang.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="Đơn hàng không tồn tại")
     return order

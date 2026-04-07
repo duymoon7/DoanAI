@@ -13,6 +13,12 @@ interface Order {
   trang_thai: string;
   phuong_thuc_thanh_toan: string;
   ngay_tao: string;
+  nguoi_dung?: {
+    id: number;
+    email: string;
+    ho_ten: string;
+    so_dien_thoai?: string;
+  };
 }
 
 export default function OrdersPage() {
@@ -179,6 +185,14 @@ export default function OrdersPage() {
                       minute: '2-digit'
                     })}
                   </p>
+                  {order.nguoi_dung && (
+                    <p className="text-sm text-gray-600 mt-1">
+                      Người đặt: <span className="font-medium text-gray-900">{order.nguoi_dung.ho_ten}</span>
+                      {order.nguoi_dung.so_dien_thoai && (
+                        <span className="ml-2">• {order.nguoi_dung.so_dien_thoai}</span>
+                      )}
+                    </p>
+                  )}
                 </div>
                 <span className={`px-4 py-2 rounded-full text-sm font-medium border mt-3 sm:mt-0 inline-block ${getStatusColor(order.trang_thai)}`}>
                   {getStatusText(order.trang_thai)}
@@ -200,7 +214,10 @@ export default function OrdersPage() {
                 <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                   <span className="text-gray-600">Tổng tiền:</span>
                   <span className="text-2xl font-bold text-primary">
-                    {order.tong_tien.toLocaleString('vi-VN')}đ
+                    {new Intl.NumberFormat('vi-VN', { 
+                      style: 'currency', 
+                      currency: 'VND' 
+                    }).format(order.tong_tien)}
                   </span>
                 </div>
               </div>

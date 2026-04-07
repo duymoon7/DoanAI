@@ -20,6 +20,7 @@ class NguoiDung(BaseModel):
     email = Column(String(255), unique=True, nullable=False, index=True)
     mat_khau = Column(String(255), nullable=False)
     ho_ten = Column(String(255), nullable=True)
+    so_dien_thoai = Column(String(20), nullable=True)
     vai_tro = Column(String(20), default="user", nullable=False)
     ngay_tao = Column(DateTime, default=datetime.utcnow, nullable=False)
     

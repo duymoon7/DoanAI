@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
+from decimal import Decimal
 
 class DanhGiaBase(BaseModel):
     san_pham_id: int
@@ -14,11 +15,28 @@ class DanhGiaUpdate(BaseModel):
     diem_so: Optional[float] = Field(None, ge=1, le=5)
     binh_luan: Optional[str] = None
 
+class NguoiDungInReview(BaseModel):
+    id: int
+    ho_ten: str
+    email: str
+    
+    class Config:
+        from_attributes = True
+
+class SanPhamInReview(BaseModel):
+    id: int
+    ten: str
+    hinh_anh: Optional[str] = None
+    
+    class Config:
+        from_attributes = True
+
 class DanhGiaResponse(DanhGiaBase):
     id: int
     nguoi_dung_id: int
     ngay_tao: datetime
-    nguoi_dung: Optional[dict] = None
+    nguoi_dung: Optional[NguoiDungInReview] = None
+    san_pham: Optional[SanPhamInReview] = None
     
     class Config:
         from_attributes = True

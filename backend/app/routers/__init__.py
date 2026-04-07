@@ -5,6 +5,7 @@ from .don_hang import router as don_hang_router
 from .chi_tiet_don_hang import router as chi_tiet_don_hang_router
 from .lich_su_chat import router as lich_su_chat_router
 from .admin import router as admin_router
+from .ma_giam_gia import router as ma_giam_gia_router
 
 __all__ = [
     "nguoi_dung_router",
@@ -14,4 +15,5 @@ __all__ = [
     "chi_tiet_don_hang_router",
     "lich_su_chat_router",
     "admin_router",
+    "ma_giam_gia_router",
 ]

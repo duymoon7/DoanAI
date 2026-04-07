@@ -20,6 +20,7 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     mat_khau: str
     ho_ten: str
+    so_dien_thoai: Optional[str] = None
     
     @field_validator('mat_khau')
     @classmethod
@@ -53,3 +54,29 @@ class TokenData(BaseModel):
     """Token payload data"""
     email: Optional[str] = None
     user_id: Optional[int] = None
+
+
+class ResetPasswordRequest(BaseModel):
+    """Reset password request schema"""
+    email: EmailStr
+    new_password: str
+    
+    @field_validator('new_password')
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        """
+        Validate password strength:
+        - At least 8 characters
+        - Contains at least one uppercase letter
+        - Contains at least one number
+        """
+        if len(v) < 8:
+            raise ValueError('Mật khẩu phải có ít nhất 8 ký tự')
+        
+        if not re.search(r'[A-Z]', v):
+            raise ValueError('Mật khẩu phải có ít nhất 1 chữ hoa')
+        
+        if not re.search(r'\d', v):
+            raise ValueError('Mật khẩu phải có ít nhất 1 số')
+        
+        return v

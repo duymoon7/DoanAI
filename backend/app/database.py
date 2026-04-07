@@ -93,6 +93,8 @@ def init_db() -> None:
             DonHang,
             ChiTietDonHang,
             LichSuChat,
+            DanhGia,
+            MaGiamGia,
         )
         
         # Log all registered models

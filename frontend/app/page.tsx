@@ -151,7 +151,7 @@ export default function HomePage() {
           <div className="max-w-md mx-auto flex gap-4">
             <input
               type="email"
-              placeholder="Email của bạn"
+              placeholder="quynhhuong@gmail.com"
               className="flex-1 px-4 py-3 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-white"
             />
             <button className="bg-accent hover:bg-accent-dark text-white px-8 py-3 rounded-lg font-semibold transition-colors">

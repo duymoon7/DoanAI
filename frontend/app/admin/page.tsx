@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { Users, Package, ShoppingCart, FolderTree, MessageSquare, Star } from 'lucide-react';
+import { Users, Package, ShoppingCart, FolderTree, MessageSquare, Star, Ticket } from 'lucide-react';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -193,8 +193,7 @@ export default function AdminDashboard() {
           </div>
         </Link>
         
-        {/* Tạm ẩn các chức năng chưa có */}
-        {/* <Link href="/admin/reviews" className="card p-6 hover:shadow-lg transition-all group">
+        <Link href="/admin/reviews" className="card p-6 hover:shadow-lg transition-all group">
           <div className="flex items-start space-x-4">
             <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center group-hover:bg-pink-200 transition-colors">
               <Star className="w-6 h-6 text-pink-600" />
@@ -208,19 +207,19 @@ export default function AdminDashboard() {
           </div>
         </Link>
         
-        <Link href="/admin/chat" className="card p-6 hover:shadow-lg transition-all group">
+        <Link href="/admin/coupons" className="card p-6 hover:shadow-lg transition-all group">
           <div className="flex items-start space-x-4">
-            <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
-              <MessageSquare className="w-6 h-6 text-indigo-600" />
+            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center group-hover:bg-orange-200 transition-colors">
+              <Ticket className="w-6 h-6 text-orange-600" />
             </div>
             <div className="flex-1">
               <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
-                Lịch sử chat AI
+                Quản lý mã giảm giá
               </h3>
-              <p className="text-gray-600 text-sm">Xem lịch sử tư vấn AI</p>
+              <p className="text-gray-600 text-sm">Tạo và quản lý mã giảm giá</p>
             </div>
           </div>
-        </Link> */}
+        </Link>
       </div>
     </div>
   );

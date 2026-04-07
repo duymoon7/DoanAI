@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import func
 from typing import List
 from ..database import get_db
 from ..models import DanhGia, NguoiDung, SanPham
 from ..schemas.danh_gia import DanhGiaCreate, DanhGiaUpdate, DanhGiaResponse
 from ..auth import get_current_user
 
-router = APIRouter(prefix="/danh-gia", tags=["Đánh giá"])
+router = APIRouter(prefix="/api/danh-gia", tags=["Đánh giá"])
 
 @router.post("", response_model=DanhGiaResponse, status_code=status.HTTP_201_CREATED)
 def create_review(
@@ -48,22 +49,65 @@ def get_reviews(
     db: Session = Depends(get_db)
 ):
     """Lấy danh sách đánh giá"""
-    query = db.query(DanhGia)
+    query = db.query(DanhGia).options(joinedload(DanhGia.nguoi_dung))
     
     if san_pham_id:
         query = query.filter(DanhGia.san_pham_id == san_pham_id)
     
+    query = query.order_by(DanhGia.ngay_tao.desc())
     reviews = query.offset(skip).limit(limit).all()
     
-    # Thêm thông tin người dùng
-    for review in reviews:
-        review.nguoi_dung = {
-            "id": review.nguoi_dung.id,
-            "ho_ten": review.nguoi_dung.ho_ten,
-            "email": review.nguoi_dung.email
-        }
+    return reviews
+
+
+@router.get("/all", response_model=List[DanhGiaResponse])
+def get_all_reviews(
+    skip: int = 0,
+    limit: int = 1000,
+    db: Session = Depends(get_db)
+):
+    """Lấy tất cả đánh giá với thông tin sản phẩm và người dùng (cho admin)"""
+    reviews = db.query(DanhGia).options(
+        joinedload(DanhGia.nguoi_dung),
+        joinedload(DanhGia.san_pham)
+    ).order_by(DanhGia.ngay_tao.desc()).offset(skip).limit(limit).all()
     
     return reviews
+
+
+@router.get("/stats/{san_pham_id}")
+def get_review_stats(san_pham_id: int, db: Session = Depends(get_db)):
+    """Lấy thống kê đánh giá của sản phẩm"""
+    # Kiểm tra sản phẩm tồn tại
+    product = db.query(SanPham).filter(SanPham.id == san_pham_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Sản phẩm không tồn tại")
+    
+    # Tổng số đánh giá
+    total_reviews = db.query(func.count(DanhGia.id)).filter(
+        DanhGia.san_pham_id == san_pham_id
+    ).scalar()
+    
+    # Điểm trung bình
+    avg_rating = db.query(func.avg(DanhGia.diem_so)).filter(
+        DanhGia.san_pham_id == san_pham_id
+    ).scalar()
+    
+    # Phân bố theo số sao
+    rating_distribution = {}
+    for star in range(1, 6):
+        count = db.query(func.count(DanhGia.id)).filter(
+            DanhGia.san_pham_id == san_pham_id,
+            DanhGia.diem_so >= star,
+            DanhGia.diem_so < star + 1
+        ).scalar()
+        rating_distribution[star] = count
+    
+    return {
+        "total_reviews": total_reviews or 0,
+        "average_rating": round(float(avg_rating), 1) if avg_rating else 0,
+        "rating_distribution": rating_distribution
+    }
 
 @router.get("/{review_id}", response_model=DanhGiaResponse)
 def get_review(review_id: int, db: Session = Depends(get_db)):

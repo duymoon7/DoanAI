@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { Mail, Lock, Eye, EyeOff, User, Check, X } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, User, Check, X, Phone } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { register } from '@/lib/api';
 
@@ -13,6 +13,7 @@ export default function RegisterPage() {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
+        phone: '',
         password: '',
         confirmPassword: '',
     });
@@ -56,6 +57,7 @@ export default function RegisterPage() {
                 email: formData.email,
                 mat_khau: formData.password,
                 ho_ten: formData.name,
+                so_dien_thoai: formData.phone || undefined,
             });
 
             toast.success('Đăng ký thành công! Đang chuyển đến trang đăng nhập...');
@@ -110,7 +112,7 @@ export default function RegisterPage() {
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     className="input pl-10"
-                                    placeholder="Nguyễn Văn A"
+                                    placeholder="        Nguyễn Văn A"
                                     disabled={loading}
                                 />
                             </div>
@@ -129,7 +131,25 @@ export default function RegisterPage() {
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                     className="input pl-10"
-                                    placeholder="your@email.com"
+                                    placeholder="        quynhhuong@gmail.com"
+                                    disabled={loading}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Phone */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Số điện thoại
+                            </label>
+                            <div className="relative">
+                                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                <input
+                                    type="tel"
+                                    value={formData.phone}
+                                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                    className="input pl-10"
+                                    placeholder="        0912345678"
                                     disabled={loading}
                                 />
                             </div>
@@ -148,7 +168,7 @@ export default function RegisterPage() {
                                     value={formData.password}
                                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                     className="input pl-10 pr-10"
-                                    placeholder="••••••••"
+                                    placeholder="        ••••••••"
                                     disabled={loading}
                                 />
                                 <button
@@ -214,7 +234,7 @@ export default function RegisterPage() {
                                     value={formData.confirmPassword}
                                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                                     className="input pl-10 pr-10"
-                                    placeholder="••••••••"
+                                    placeholder="        ••••••••"
                                     disabled={loading}
                                 />
                                 <button

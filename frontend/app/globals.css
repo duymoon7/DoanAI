@@ -90,3 +90,55 @@ html {
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* Placeholder styling - make it more visible */
+::placeholder {
+  color: #9ca3af;
+  opacity: 1;
+  font-weight: 400;
+}
+
+::-webkit-input-placeholder {
+  color: #9ca3af;
+  opacity: 1;
+  font-weight: 400;
+}
+
+::-moz-placeholder {
+  color: #9ca3af;
+  opacity: 1;
+  font-weight: 400;
+}
+
+:-ms-input-placeholder {
+  color: #9ca3af;
+  opacity: 1;
+  font-weight: 400;
+}
+
+::-ms-input-placeholder {
+  color: #9ca3af;
+  opacity: 1;
+  font-weight: 400;
+}
+
+/* Fix placeholder position for inputs with left padding (icon inputs) */
+input.pl-10::placeholder {
+  padding-left: 0.25rem;
+}
+
+input.pl-10::-webkit-input-placeholder {
+  padding-left: 0.25rem;
+}
+
+input.pl-10::-moz-placeholder {
+  padding-left: 0.25rem;
+}
+
+input.pl-10:-ms-input-placeholder {
+  padding-left: 0.25rem;
+}
+
+input.pl-10::-ms-input-placeholder {
+  padding-left: 0.25rem;
+}

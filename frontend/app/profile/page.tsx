@@ -10,6 +10,7 @@ export default function ProfilePage() {
     id: 0,
     email: '',
     ho_ten: '',
+    so_dien_thoai: '',
     vai_tro: 'user',
     ngay_tao: ''
   });
@@ -38,6 +39,7 @@ export default function ProfilePage() {
         id: user.id,
         email: user.email,
         ho_ten: user.ho_ten || '',
+        so_dien_thoai: user.so_dien_thoai || '',
         vai_tro: user.vai_tro,
         ngay_tao: user.ngay_tao
       });
@@ -117,6 +119,18 @@ export default function ProfilePage() {
             <input
               type="text"
               value={profile.ho_ten || 'Chưa cập nhật'}
+              disabled
+              className="w-full px-4 py-2 border rounded-lg bg-gray-50"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Số điện thoại
+            </label>
+            <input
+              type="tel"
+              value={profile.so_dien_thoai || 'Chưa cập nhật'}
               disabled
               className="w-full px-4 py-2 border rounded-lg bg-gray-50"
             />

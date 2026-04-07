@@ -348,7 +348,7 @@ export default function AdminProductsPage() {
                     value={formData.hinh_anh}
                     onChange={(e) => setFormData({ ...formData, hinh_anh: e.target.value })}
                     className="input w-full"
-                    placeholder="https://example.com/image.jpg"
+                    placeholder="https://images.unsplash.com/photo-..."
                   />
                 </div>
 

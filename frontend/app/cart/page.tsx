@@ -13,6 +13,12 @@ export default function CartPage() {
     const { cart, removeFromCart, updateQuantity, getTotalPrice, clearCart } = useCart();
     const [paymentMethod, setPaymentMethod] = useState<'cod' | 'bank'>('cod');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [shippingInfo, setShippingInfo] = useState({
+        fullName: '',
+        phone: '',
+        address: '',
+        note: ''
+    });
     const router = useRouter();
 
     const handleCheckout = async () => {
@@ -21,6 +27,27 @@ export default function CartPage() {
         if (!userStr) {
             toast.error('Vui lòng đăng nhập để đặt hàng');
             router.push('/auth/login');
+            return;
+        }
+
+        // Validate shipping info
+        if (!shippingInfo.fullName.trim()) {
+            toast.error('Vui lòng nhập họ tên');
+            return;
+        }
+        if (!shippingInfo.phone.trim()) {
+            toast.error('Vui lòng nhập số điện thoại');
+            return;
+        }
+        if (!shippingInfo.address.trim()) {
+            toast.error('Vui lòng nhập địa chỉ giao hàng');
+            return;
+        }
+
+        // Validate phone number (basic)
+        const phoneRegex = /^[0-9]{10,11}$/;
+        if (!phoneRegex.test(shippingInfo.phone.replace(/\s/g, ''))) {
+            toast.error('Số điện thoại không hợp lệ (10-11 số)');
             return;
         }
 
@@ -37,6 +64,7 @@ export default function CartPage() {
             };
 
             console.log('Creating order with data:', orderData);
+            console.log('Shipping info:', shippingInfo);
             const order = await createOrder(orderData);
             console.log('Order created:', order);
 
@@ -52,9 +80,11 @@ export default function CartPage() {
                 await createOrderItem(itemData);
             }
 
-            // Clear cart
+            // Clear cart and shipping info
             clearCart();
-            toast.success('Đặt hàng thành công!');
+            setShippingInfo({ fullName: '', phone: '', address: '', note: '' });
+            
+            toast.success(`Đặt hàng thành công! Giao hàng đến: ${shippingInfo.address}`);
             router.push('/orders');
         } catch (error: any) {
             console.error('Error creating order:', error);
@@ -224,6 +254,73 @@ export default function CartPage() {
                                     <span className="text-2xl font-bold text-primary">
                                         {getTotalPrice().toLocaleString('vi-VN')}đ
                                     </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Shipping Information */}
+                        <div className="mb-6">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                                Thông tin giao hàng
+                            </h3>
+                            <div className="space-y-4">
+                                {/* Full Name */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Họ và tên <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={shippingInfo.fullName}
+                                        onChange={(e) => setShippingInfo({ ...shippingInfo, fullName: e.target.value })}
+                                        placeholder="        Nguyễn Văn A"
+                                        className="w-full input"
+                                        required
+                                    />
+                                </div>
+
+                                {/* Phone */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Số điện thoại <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="tel"
+                                        value={shippingInfo.phone}
+                                        onChange={(e) => setShippingInfo({ ...shippingInfo, phone: e.target.value })}
+                                        placeholder="        0912345678"
+                                        className="w-full input"
+                                        required
+                                    />
+                                </div>
+
+                                {/* Address */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Địa chỉ giao hàng <span className="text-red-500">*</span>
+                                    </label>
+                                    <textarea
+                                        value={shippingInfo.address}
+                                        onChange={(e) => setShippingInfo({ ...shippingInfo, address: e.target.value })}
+                                        placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố"
+                                        className="w-full input min-h-[80px] resize-none"
+                                        rows={3}
+                                        required
+                                    />
+                                </div>
+
+                                {/* Note (Optional) */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Ghi chú (tùy chọn)
+                                    </label>
+                                    <textarea
+                                        value={shippingInfo.note}
+                                        onChange={(e) => setShippingInfo({ ...shippingInfo, note: e.target.value })}
+                                        placeholder="Ghi chú thêm về đơn hàng (thời gian giao hàng, địa chỉ cụ thể...)"
+                                        className="w-full input min-h-[60px] resize-none"
+                                        rows={2}
+                                    />
                                 </div>
                             </div>
                         </div>

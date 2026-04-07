@@ -1,11 +1,26 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import or_, func
 from typing import List
+import unicodedata
 from app.database import get_db
 from app.models import SanPham, DanhMuc
 from app.schemas import SanPhamCreate, SanPhamUpdate, SanPhamResponse
 
 router = APIRouter(prefix="/api/san-pham", tags=["Sản phẩm"])
+
+
+def remove_accents(text: str) -> str:
+    """Remove Vietnamese accents from text"""
+    if not text:
+        return ""
+    # Normalize unicode and remove accents
+    nfd = unicodedata.normalize('NFD', text)
+    without_accents = ''.join(c for c in nfd if unicodedata.category(c) != 'Mn')
+    # Replace đ and Đ
+    without_accents = without_accents.replace('đ', 'd').replace('Đ', 'D')
+    return without_accents.lower()
+
 
 @router.get("/", response_model=List[SanPhamResponse])
 def get_all_products(
@@ -22,17 +37,58 @@ def get_all_products(
     """
     Lấy danh sách sản phẩm với filter và search
     
-    - search: Tìm kiếm theo tên sản phẩm
+    - search: Tìm kiếm theo tên sản phẩm, mô tả, hoặc tên danh mục (hỗ trợ không dấu)
     - danh_muc_id: Lọc theo danh mục
     - min_price, max_price: Lọc theo khoảng giá
     - sort_by: Sắp xếp theo (id, ten, gia, ngay_tao)
     - order: Thứ tự (asc, desc)
     """
-    query = db.query(SanPham)
+    query = db.query(SanPham).options(joinedload(SanPham.danh_muc))
     
-    # Search by name
+    # Search by name, description, or category name (with accent-insensitive search)
     if search:
-        query = query.filter(SanPham.ten.like(f"%{search}%"))
+        # Get all products with their categories
+        all_products = query.all()
+        
+        # Normalize search query
+        normalized_search = remove_accents(search)
+        search_words = normalized_search.split()
+        
+        # Filter products
+        filtered_products = []
+        for product in all_products:
+            normalized_name = remove_accents(product.ten)
+            normalized_desc = remove_accents(product.mo_ta or "")
+            normalized_category = remove_accents(product.danh_muc.ten if product.danh_muc else "")
+            
+            # Check if any word in search matches product name, description, or category
+            if any(
+                word in normalized_name or 
+                word in normalized_desc or 
+                word in normalized_category
+                for word in search_words if word
+            ):
+                filtered_products.append(product)
+        
+        # Apply other filters
+        if danh_muc_id:
+            filtered_products = [p for p in filtered_products if p.danh_muc_id == danh_muc_id]
+        if min_price is not None:
+            filtered_products = [p for p in filtered_products if p.gia >= min_price]
+        if max_price is not None:
+            filtered_products = [p for p in filtered_products if p.gia <= max_price]
+        
+        # Sorting
+        if sort_by == "ten":
+            filtered_products.sort(key=lambda x: x.ten, reverse=(order == "desc"))
+        elif sort_by == "gia":
+            filtered_products.sort(key=lambda x: x.gia, reverse=(order == "desc"))
+        elif sort_by == "ngay_tao":
+            filtered_products.sort(key=lambda x: x.ngay_tao, reverse=(order == "desc"))
+        else:
+            filtered_products.sort(key=lambda x: x.id, reverse=(order == "desc"))
+        
+        return filtered_products[skip:skip+limit]
     
     # Filter by category
     if danh_muc_id:
@@ -60,7 +116,7 @@ def get_all_products(
 @router.get("/{product_id}", response_model=SanPhamResponse)
 def get_product(product_id: int, db: Session = Depends(get_db)):
     """Lấy thông tin sản phẩm theo ID"""
-    product = db.query(SanPham).filter(SanPham.id == product_id).first()
+    product = db.query(SanPham).options(joinedload(SanPham.danh_muc)).filter(SanPham.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Sản phẩm không tồn tại")
     return product
@@ -116,14 +172,34 @@ def delete_product(product_id: int, db: Session = Depends(get_db)):
 @router.get("/search", response_model=List[SanPhamResponse])
 def search_products(q: str, limit: int = 10, db: Session = Depends(get_db)):
     """
-    Tìm kiếm nhanh sản phẩm
+    Tìm kiếm nhanh sản phẩm (hỗ trợ không dấu và tìm theo danh mục)
     
     - q: Từ khóa tìm kiếm
     """
-    products = db.query(SanPham).filter(
-        SanPham.ten.like(f"%{q}%")
-    ).limit(limit).all()
-    return products
+    # Get all products with categories
+    all_products = db.query(SanPham).options(joinedload(SanPham.danh_muc)).all()
+    
+    # Normalize search query
+    normalized_query = remove_accents(q)
+    search_words = normalized_query.split()
+    
+    # Filter products
+    filtered_products = []
+    for product in all_products:
+        normalized_name = remove_accents(product.ten)
+        normalized_desc = remove_accents(product.mo_ta or "")
+        normalized_category = remove_accents(product.danh_muc.ten if product.danh_muc else "")
+        
+        # Check if any word matches product name, description, or category
+        if any(
+            word in normalized_name or 
+            word in normalized_desc or 
+            word in normalized_category
+            for word in search_words if word
+        ):
+            filtered_products.append(product)
+    
+    return filtered_products[:limit]
 
 
 @router.get("/category/{category_id}", response_model=List[SanPhamResponse])
@@ -134,7 +210,7 @@ def get_products_by_category(
     db: Session = Depends(get_db)
 ):
     """Lấy sản phẩm theo danh mục"""
-    products = db.query(SanPham).filter(
+    products = db.query(SanPham).options(joinedload(SanPham.danh_muc)).filter(
         SanPham.danh_muc_id == category_id
     ).offset(skip).limit(limit).all()
     return products
@@ -143,7 +219,7 @@ def get_products_by_category(
 @router.get("/featured", response_model=List[SanPhamResponse])
 def get_featured_products(limit: int = 6, db: Session = Depends(get_db)):
     """Lấy sản phẩm nổi bật (mới nhất)"""
-    products = db.query(SanPham).order_by(
+    products = db.query(SanPham).options(joinedload(SanPham.danh_muc)).order_by(
         SanPham.ngay_tao.desc()
     ).limit(limit).all()
     return products

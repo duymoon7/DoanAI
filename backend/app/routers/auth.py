@@ -14,7 +14,8 @@ from app.schemas import (
     NguoiDungResponse,
     Token,
     LoginRequest,
-    RegisterRequest
+    RegisterRequest,
+    ResetPasswordRequest
 )
 from app.auth import (
     verify_password,
@@ -53,6 +54,7 @@ def register(user_data: RegisterRequest, db: Session = Depends(get_db)):
             email=user_data.email,
             mat_khau=hashed_password,
             ho_ten=user_data.ho_ten,
+            so_dien_thoai=user_data.so_dien_thoai,
             vai_tro="user"  # Default role
         )
         
@@ -93,7 +95,7 @@ def login(login_data: LoginRequest, db: Session = Depends(get_db)):
     # Create access token
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.id, "email": user.email, "role": user.vai_tro},
+        data={"sub": str(user.id), "email": user.email, "role": user.vai_tro},
         expires_delta=access_token_expires
     )
     
@@ -126,7 +128,7 @@ def login_for_access_token(
     
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.id, "email": user.email, "role": user.vai_tro},
+        data={"sub": str(user.id), "email": user.email, "role": user.vai_tro},
         expires_delta=access_token_expires
     )
     
@@ -174,3 +176,32 @@ def change_password(
     db.commit()
     
     return {"message": "Đổi mật khẩu thành công"}
+
+
+@router.post("/reset-password")
+def reset_password(
+    reset_data: ResetPasswordRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Đặt lại mật khẩu (quên mật khẩu)
+    
+    - Tìm user theo email
+    - Hash và lưu mật khẩu mới
+    """
+    # Find user by email
+    user = db.query(NguoiDung).filter(NguoiDung.email == reset_data.email).first()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Email không tồn tại trong hệ thống"
+        )
+    
+    # Hash new password
+    hashed_password = get_password_hash(reset_data.new_password)
+    user.mat_khau = hashed_password
+    
+    db.commit()
+    
+    return {"message": "Đặt lại mật khẩu thành công"}

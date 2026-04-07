@@ -4,7 +4,7 @@ from .san_pham import SanPhamCreate, SanPhamUpdate, SanPhamResponse
 from .don_hang import DonHangCreate, DonHangUpdate, DonHangResponse
 from .chi_tiet_don_hang import ChiTietDonHangCreate, ChiTietDonHangResponse
 from .lich_su_chat import LichSuChatCreate, LichSuChatResponse
-from .auth import LoginRequest, RegisterRequest, Token, TokenData
+from .auth import LoginRequest, RegisterRequest, Token, TokenData, ResetPasswordRequest
 
 __all__ = [
     "NguoiDungCreate", "NguoiDungUpdate", "NguoiDungResponse",
@@ -13,5 +13,5 @@ __all__ = [
     "DonHangCreate", "DonHangUpdate", "DonHangResponse",
     "ChiTietDonHangCreate", "ChiTietDonHangResponse",
     "LichSuChatCreate", "LichSuChatResponse",
-    "LoginRequest", "RegisterRequest", "Token", "TokenData",
+    "LoginRequest", "RegisterRequest", "Token", "TokenData", "ResetPasswordRequest",
 ]

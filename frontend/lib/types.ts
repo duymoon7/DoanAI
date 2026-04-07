@@ -34,3 +34,25 @@ export interface CartItem {
     product: Product;
     quantity: number;
 }
+
+export interface Review {
+    id: number;
+    nguoi_dung_id: number;
+    san_pham_id: number;
+    diem_so: number;
+    binh_luan: string | null;
+    ngay_tao: string;
+    nguoi_dung?: {
+        id: number;
+        ho_ten: string;
+        email: string;
+    };
+}
+
+export interface ReviewStats {
+    total_reviews: number;
+    average_rating: number;
+    rating_distribution: {
+        [key: number]: number;
+    };
+}

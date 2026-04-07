@@ -33,12 +33,20 @@ function ProductsContent() {
         const fetchData = async () => {
             setLoading(true);
             try {
-                const [productsData, categoriesData] = await Promise.all([
-                    getProducts(),
-                    getCategories(),
-                ]);
-                setProducts(productsData);
+                // Fetch categories
+                const categoriesData = await getCategories();
                 setCategories(categoriesData);
+                
+                // Fetch products with search and filters
+                const productsData = await getProducts({
+                    search: searchQuery || undefined,
+                    danh_muc_id: selectedCategory ? parseInt(selectedCategory) : undefined,
+                    min_price: priceRange[0] > 0 ? priceRange[0] : undefined,
+                    max_price: priceRange[1] < 50000000 ? priceRange[1] : undefined,
+                    sort_by: sortBy === 'newest' ? 'ngay_tao' : sortBy === 'name' ? 'ten' : sortBy.replace('price-', ''),
+                    order: sortBy.includes('desc') ? 'desc' : sortBy === 'newest' ? 'desc' : 'asc',
+                });
+                setProducts(productsData);
             } catch (error) {
                 console.error('Error fetching data:', error);
             } finally {
@@ -47,40 +55,10 @@ function ProductsContent() {
         };
 
         fetchData();
-    }, []);
+    }, [searchQuery, selectedCategory, priceRange, sortBy]);
 
-    // Filter and sort products
-    const filteredProducts = products
-        .filter((product) => {
-            // Category filter
-            if (selectedCategory && product.danh_muc_id !== parseInt(selectedCategory)) {
-                return false;
-            }
-
-            // Price filter
-            if (product.gia < priceRange[0] || product.gia > priceRange[1]) {
-                return false;
-            }
-
-            // Search filter
-            if (searchQuery && !product.ten.toLowerCase().includes(searchQuery.toLowerCase())) {
-                return false;
-            }
-
-            return true;
-        })
-        .sort((a, b) => {
-            switch (sortBy) {
-                case 'price-asc':
-                    return a.gia - b.gia;
-                case 'price-desc':
-                    return b.gia - a.gia;
-                case 'name':
-                    return a.ten.localeCompare(b.ten);
-                default: // newest
-                    return new Date(b.ngay_tao).getTime() - new Date(a.ngay_tao).getTime();
-            }
-        });
+    // Backend handles all filtering, so we just display the products
+    const filteredProducts = products;
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -88,9 +66,15 @@ function ProductsContent() {
             <div className="flex items-center justify-between mb-8">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900">Sản phẩm</h1>
-                    <p className="text-gray-600 mt-2">
-                        Tìm thấy {filteredProducts.length} sản phẩm
-                    </p>
+                    {searchQuery ? (
+                        <p className="text-gray-600 mt-2">
+                            Tìm thấy {filteredProducts.length} sản phẩm cho <span className="font-semibold text-primary">"{searchQuery}"</span>
+                        </p>
+                    ) : (
+                        <p className="text-gray-600 mt-2">
+                            Tìm thấy {filteredProducts.length} sản phẩm
+                        </p>
+                    )}
                 </div>
 
                 <button

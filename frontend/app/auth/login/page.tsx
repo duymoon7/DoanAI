@@ -81,7 +81,7 @@ export default function LoginPage() {
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                     className="input pl-10"
-                                    placeholder="your@email.com"
+                                    placeholder="        quynhhuong@gmail.com"
                                     disabled={loading}
                                 />
                             </div>
@@ -100,7 +100,7 @@ export default function LoginPage() {
                                     value={formData.password}
                                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                     className="input pl-10 pr-10"
-                                    placeholder="••••••••"
+                                    placeholder="        ••••••••"
                                     disabled={loading}
                                 />
                                 <button

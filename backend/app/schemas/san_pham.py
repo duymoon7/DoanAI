@@ -20,9 +20,17 @@ class SanPhamUpdate(BaseModel):
     hinh_anh: Optional[str] = None
     danh_muc_id: Optional[int] = None
 
+class DanhMucInProduct(BaseModel):
+    id: int
+    ten: str
+    
+    class Config:
+        from_attributes = True
+
 class SanPhamResponse(SanPhamBase):
     id: int
     ngay_tao: datetime
+    danh_muc: Optional[DanhMucInProduct] = None
     
     class Config:
         from_attributes = True

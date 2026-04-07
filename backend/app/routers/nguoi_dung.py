@@ -13,6 +13,14 @@ def get_all_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
     users = db.query(NguoiDung).offset(skip).limit(limit).all()
     return users
 
+
+@router.get("/check-email/{email}")
+def check_email_exists(email: str, db: Session = Depends(get_db)):
+    """Kiểm tra email có tồn tại trong hệ thống không"""
+    user = db.query(NguoiDung).filter(NguoiDung.email == email).first()
+    return {"exists": user is not None}
+
+
 @router.get("/{user_id}", response_model=NguoiDungResponse)
 def get_user(user_id: int, db: Session = Depends(get_db)):
     """Lấy thông tin người dùng theo ID"""

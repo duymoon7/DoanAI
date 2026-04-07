@@ -199,6 +199,7 @@ from app.routers.auth import router as auth_router
 from app.routers.chatbot import router as chatbot_router
 from app.routers.statistics import router as statistics_router
 from app.routers.danh_gia import router as danh_gia_router
+from app.routers.ma_giam_gia import router as ma_giam_gia_router
 
 app.include_router(auth_router)
 app.include_router(chatbot_router)
@@ -211,3 +212,4 @@ app.include_router(chi_tiet_don_hang_router)
 app.include_router(lich_su_chat_router)
 app.include_router(admin_router)
 app.include_router(danh_gia_router)
+app.include_router(ma_giam_gia_router)
