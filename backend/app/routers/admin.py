@@ -395,3 +395,218 @@ async def clear_table(table_name: str, db: Session = Depends(get_db)):
         db.rollback()
         logger.error(f"Failed to clear table '{table_name}': {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================
+# CHATBOX MANAGEMENT ENDPOINTS
+# ============================================
+
+@router.get("/chatbox/stats")
+async def get_chatbox_stats(db: Session = Depends(get_db)):
+    """
+    Lấy thống kê về chatbox.
+    
+    Returns:
+        - Tổng số tin nhắn
+        - Số người dùng đã chat
+        - Tin nhắn theo ngày
+        - Top người dùng chat nhiều nhất
+    """
+    try:
+        from sqlalchemy import func
+        from datetime import datetime, timedelta
+        
+        # Tổng số tin nhắn
+        total_messages = db.query(LichSuChat).count()
+        
+        # Số người dùng đã chat (không null)
+        unique_users = db.query(func.count(func.distinct(LichSuChat.nguoi_dung_id)))\
+            .filter(LichSuChat.nguoi_dung_id.isnot(None)).scalar()
+        
+        # Tin nhắn khách (guest)
+        guest_messages = db.query(LichSuChat)\
+            .filter(LichSuChat.nguoi_dung_id.is_(None)).count()
+        
+        # Tin nhắn 7 ngày gần đây
+        seven_days_ago = datetime.utcnow() - timedelta(days=7)
+        recent_messages = db.query(LichSuChat)\
+            .filter(LichSuChat.ngay_tao >= seven_days_ago).count()
+        
+        # Top 5 người dùng chat nhiều nhất
+        top_users = db.query(
+            NguoiDung.id,
+            NguoiDung.ho_ten,
+            NguoiDung.email,
+            func.count(LichSuChat.id).label('message_count')
+        ).join(LichSuChat, NguoiDung.id == LichSuChat.nguoi_dung_id)\
+         .group_by(NguoiDung.id)\
+         .order_by(func.count(LichSuChat.id).desc())\
+         .limit(5).all()
+        
+        # Tin nhắn theo ngày (7 ngày gần đây)
+        messages_by_day = db.query(
+            func.date(LichSuChat.ngay_tao).label('date'),
+            func.count(LichSuChat.id).label('count')
+        ).filter(LichSuChat.ngay_tao >= seven_days_ago)\
+         .group_by(func.date(LichSuChat.ngay_tao))\
+         .order_by(func.date(LichSuChat.ngay_tao)).all()
+        
+        return {
+            "status": "success",
+            "total_messages": total_messages,
+            "unique_users": unique_users,
+            "guest_messages": guest_messages,
+            "recent_messages_7days": recent_messages,
+            "top_users": [
+                {
+                    "id": user.id,
+                    "name": user.ho_ten or "N/A",
+                    "email": user.email,
+                    "message_count": user.message_count
+                }
+                for user in top_users
+            ],
+            "messages_by_day": [
+                {
+                    "date": str(day.date),
+                    "count": day.count
+                }
+                for day in messages_by_day
+            ]
+        }
+    except Exception as e:
+        logger.error(f"Failed to get chatbox stats: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/chatbox/history")
+async def get_all_chat_history(
+    skip: int = 0,
+    limit: int = 50,
+    user_id: int = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Lấy lịch sử chat của tất cả người dùng (cho admin).
+    
+    Args:
+        skip: Số bản ghi bỏ qua
+        limit: Số bản ghi tối đa
+        user_id: Lọc theo ID người dùng (optional)
+    """
+    try:
+        query = db.query(LichSuChat)
+        
+        if user_id:
+            query = query.filter(LichSuChat.nguoi_dung_id == user_id)
+        
+        total = query.count()
+        chats = query.order_by(LichSuChat.ngay_tao.desc())\
+                    .offset(skip)\
+                    .limit(limit)\
+                    .all()
+        
+        # Lấy thông tin người dùng
+        result = []
+        for chat in chats:
+            user_info = None
+            if chat.nguoi_dung_id:
+                user = db.query(NguoiDung).filter(NguoiDung.id == chat.nguoi_dung_id).first()
+                if user:
+                    user_info = {
+                        "id": user.id,
+                        "name": user.ho_ten,
+                        "email": user.email
+                    }
+            
+            result.append({
+                "id": chat.id,
+                "user": user_info or {"id": None, "name": "Khách", "email": "N/A"},
+                "message": chat.tin_nhan,
+                "response": chat.phan_hoi,
+                "created_at": chat.ngay_tao.isoformat() if chat.ngay_tao else None
+            })
+        
+        return {
+            "status": "success",
+            "total": total,
+            "skip": skip,
+            "limit": limit,
+            "data": result
+        }
+    except Exception as e:
+        logger.error(f"Failed to get chat history: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/chatbox/clear")
+async def clear_chat_history(
+    user_id: int = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Xóa lịch sử chat.
+    
+    Args:
+        user_id: Nếu có, chỉ xóa chat của user này. Nếu không, xóa tất cả.
+    
+    ⚠️  CẢNH BÁO: Endpoint này sẽ XÓA DỮ LIỆU!
+    """
+    check_dev_environment()
+    
+    try:
+        query = db.query(LichSuChat)
+        
+        if user_id:
+            query = query.filter(LichSuChat.nguoi_dung_id == user_id)
+            count = query.count()
+            query.delete()
+            db.commit()
+            message = f"Đã xóa {count} tin nhắn của user ID {user_id}"
+        else:
+            count = query.count()
+            query.delete()
+            db.commit()
+            message = f"Đã xóa toàn bộ {count} tin nhắn"
+        
+        logger.info(f"✅ {message}")
+        
+        return {
+            "status": "success",
+            "deleted_count": count,
+            "message": message
+        }
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to clear chat history: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/chatbox/config")
+async def get_chatbox_config():
+    """
+    Lấy cấu hình hiện tại của chatbox.
+    
+    Returns:
+        - AI provider (openai/gemini)
+        - API key status (có/không)
+        - Environment variables
+    """
+    try:
+        ai_provider = os.getenv("AI_PROVIDER", "openai")
+        openai_key = os.getenv("OPENAI_API_KEY", "")
+        gemini_key = os.getenv("GEMINI_API_KEY", "")
+        
+        return {
+            "status": "success",
+            "config": {
+                "ai_provider": ai_provider,
+                "openai_configured": bool(openai_key and len(openai_key) > 10),
+                "gemini_configured": bool(gemini_key and len(gemini_key) > 10),
+                "openai_key_preview": f"{openai_key[:10]}..." if openai_key else "Not set",
+                "gemini_key_preview": f"{gemini_key[:10]}..." if gemini_key else "Not set",
+            }
+        }
+    except Exception as e:
+        logger.error(f"Failed to get chatbox config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

@@ -49,20 +49,26 @@ def validate_coupon(
     if not coupon:
         return MaGiamGiaValidate(
             valid=False,
-            message="Mã giảm giá không tồn tại"
+            message="Mã giảm giá không tồn tại",
+            coupon_id=None,
+            discount_amount=Decimal(0)
         )
     
     if not coupon.hoat_dong:
         return MaGiamGiaValidate(
             valid=False,
-            message="Mã giảm giá đã bị vô hiệu hóa"
+            message="Mã giảm giá đã bị vô hiệu hóa",
+            coupon_id=None,
+            discount_amount=Decimal(0)
         )
     
     # Kiểm tra số lượng
     if coupon.da_su_dung >= coupon.so_luong:
         return MaGiamGiaValidate(
             valid=False,
-            message="Mã giảm giá đã hết lượt sử dụng"
+            message="Mã giảm giá đã hết lượt sử dụng",
+            coupon_id=None,
+            discount_amount=Decimal(0)
         )
     
     # Kiểm tra thời gian
@@ -70,20 +76,26 @@ def validate_coupon(
     if coupon.ngay_bat_dau and now < coupon.ngay_bat_dau:
         return MaGiamGiaValidate(
             valid=False,
-            message="Mã giảm giá chưa đến thời gian sử dụng"
+            message="Mã giảm giá chưa đến thời gian sử dụng",
+            coupon_id=None,
+            discount_amount=Decimal(0)
         )
     
     if coupon.ngay_ket_thuc and now > coupon.ngay_ket_thuc:
         return MaGiamGiaValidate(
             valid=False,
-            message="Mã giảm giá đã hết hạn"
+            message="Mã giảm giá đã hết hạn",
+            coupon_id=None,
+            discount_amount=Decimal(0)
         )
     
     # Kiểm tra giá trị đơn hàng tối thiểu
     if order_total < coupon.gia_tri_don_toi_thieu:
         return MaGiamGiaValidate(
             valid=False,
-            message=f"Đơn hàng tối thiểu {coupon.gia_tri_don_toi_thieu:,.0f}đ để sử dụng mã này"
+            message=f"Đơn hàng tối thiểu {coupon.gia_tri_don_toi_thieu:,.0f}đ để sử dụng mã này",
+            coupon_id=None,
+            discount_amount=Decimal(0)
         )
     
     # Tính giá trị giảm
@@ -96,6 +108,7 @@ def validate_coupon(
         valid=True,
         message="Mã giảm giá hợp lệ",
         discount_amount=discount_amount,
+        coupon_id=coupon.id,
         ma_giam_gia=coupon
     )
 

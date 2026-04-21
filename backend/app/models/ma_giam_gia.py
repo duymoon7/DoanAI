@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Numeric, DateTime, Boolean
+from sqlalchemy.orm import relationship
 from datetime import datetime
 
 from .base import BaseModel
@@ -20,6 +21,9 @@ class MaGiamGia(BaseModel):
     hoat_dong = Column(Boolean, default=True)
     ngay_tao = Column(DateTime, default=datetime.utcnow, nullable=False)
     ngay_cap_nhat = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    don_hang = relationship("DonHang", back_populates="ma_giam_gia")
     
     def __repr__(self):
         return f"<MaGiamGia(id={self.id}, ma_code={self.ma_code}, gia_tri_giam={self.gia_tri_giam})>"

@@ -14,7 +14,10 @@ class SanPham(BaseModel):
     mo_ta = Column(Text, nullable=True)
     hinh_anh = Column(String(500), nullable=True)
     danh_muc_id = Column(Integer, ForeignKey("danh_muc.id"), nullable=False)
+    ton_kho = Column(Integer, default=0, nullable=False)
+    trang_thai = Column(String(20), default="active", nullable=False)  # active, inactive
     ngay_tao = Column(DateTime, default=datetime.utcnow, nullable=False)
+    ngay_cap_nhat = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     danh_muc = relationship("DanhMuc", back_populates="san_pham")

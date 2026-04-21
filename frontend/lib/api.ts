@@ -158,3 +158,20 @@ export const getCurrentUser = async (token: string) => {
     });
     return response.data;
 };
+
+// Coupons
+export const validateCoupon = async (ma_code: string, order_total: number) => {
+    const response = await api.post('/ma-giam-gia/validate', null, {
+        params: {
+            ma_code,
+            order_total
+        }
+    });
+    return response.data;
+};
+
+// Stock Check
+export const checkStock = async (items: { product_id: number; quantity: number }[]) => {
+    const response = await api.post('/san-pham/check-stock', items);
+    return response.data;
+};

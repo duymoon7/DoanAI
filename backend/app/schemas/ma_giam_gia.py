@@ -40,5 +40,6 @@ class MaGiamGiaValidate(BaseModel):
     """Response khi validate mã giảm giá"""
     valid: bool
     message: str
-    discount_amount: Optional[Decimal] = None
+    discount_amount: Decimal = Decimal(0)
+    coupon_id: Optional[int] = None
     ma_giam_gia: Optional[MaGiamGiaResponse] = None

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime
+from sqlalchemy import Column, String, DateTime, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
@@ -21,8 +21,11 @@ class NguoiDung(BaseModel):
     mat_khau = Column(String(255), nullable=False)
     ho_ten = Column(String(255), nullable=True)
     so_dien_thoai = Column(String(20), nullable=True)
+    dia_chi = Column(Text, nullable=True)
+    avatar = Column(String(500), nullable=True)
     vai_tro = Column(String(20), default="user", nullable=False)
     ngay_tao = Column(DateTime, default=datetime.utcnow, nullable=False)
+    ngay_cap_nhat = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     don_hang = relationship("DonHang", back_populates="nguoi_dung", cascade="all, delete-orphan")

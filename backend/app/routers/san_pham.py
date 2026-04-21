@@ -223,3 +223,50 @@ def get_featured_products(limit: int = 6, db: Session = Depends(get_db)):
         SanPham.ngay_tao.desc()
     ).limit(limit).all()
     return products
+
+
+@router.post("/check-stock")
+def check_stock(items: List[dict], db: Session = Depends(get_db)):
+    """
+    Kiểm tra tồn kho cho danh sách sản phẩm
+    items: [{"product_id": 1, "quantity": 2}, ...]
+    """
+    out_of_stock = []
+    insufficient_stock = []
+    
+    for item in items:
+        product_id = item.get("product_id")
+        quantity = item.get("quantity", 0)
+        
+        product = db.query(SanPham).filter(SanPham.id == product_id).first()
+        
+        if not product:
+            out_of_stock.append({
+                "product_id": product_id,
+                "message": "Sản phẩm không tồn tại"
+            })
+            continue
+        
+        if product.ton_kho <= 0:
+            out_of_stock.append({
+                "product_id": product_id,
+                "product_name": product.ten,
+                "message": f"{product.ten} đã hết hàng"
+            })
+        elif product.ton_kho < quantity:
+            insufficient_stock.append({
+                "product_id": product_id,
+                "product_name": product.ten,
+                "requested": quantity,
+                "available": product.ton_kho,
+                "message": f"{product.ten} chỉ còn {product.ton_kho} sản phẩm"
+            })
+    
+    if out_of_stock or insufficient_stock:
+        return {
+            "valid": False,
+            "out_of_stock": out_of_stock,
+            "insufficient_stock": insufficient_stock
+        }
+    
+    return {"valid": True, "message": "Tất cả sản phẩm đều còn hàng"}

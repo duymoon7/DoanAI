@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, CreditCard, Truck } from 'lucide-react';
 import { useState } from 'react';
-import { createOrder, createOrderItem } from '@/lib/api';
+import { createOrder, createOrderItem, validateCoupon, checkStock } from '@/lib/api';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 
@@ -19,7 +19,53 @@ export default function CartPage() {
         address: '',
         note: ''
     });
+    const [couponCode, setCouponCode] = useState('');
+    const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+    const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
     const router = useRouter();
+
+    const getSubtotal = () => getTotalPrice();
+    
+    const getDiscount = () => {
+        if (!appliedCoupon) return 0;
+        return Number(appliedCoupon.discount_amount) || 0;
+    };
+    
+    const getFinalTotal = () => {
+        return getSubtotal() - getDiscount();
+    };
+
+    const handleApplyCoupon = async () => {
+        if (!couponCode.trim()) {
+            toast.error('Vui lòng nhập mã giảm giá');
+            return;
+        }
+
+        setIsValidatingCoupon(true);
+        try {
+            const result = await validateCoupon(couponCode.trim().toUpperCase(), getSubtotal());
+            
+            if (result.valid) {
+                setAppliedCoupon(result);
+                toast.success(result.message);
+            } else {
+                setAppliedCoupon(null);
+                toast.error(result.message);
+            }
+        } catch (error: any) {
+            console.error('Error validating coupon:', error);
+            toast.error('Không thể kiểm tra mã giảm giá');
+            setAppliedCoupon(null);
+        } finally {
+            setIsValidatingCoupon(false);
+        }
+    };
+
+    const handleRemoveCoupon = () => {
+        setAppliedCoupon(null);
+        setCouponCode('');
+        toast.success('Đã xóa mã giảm giá');
+    };
 
     const handleCheckout = async () => {
         // Check if user is logged in
@@ -55,20 +101,52 @@ export default function CartPage() {
         setIsProcessing(true);
 
         try {
-            // Create order
+            // 1. Check stock before checkout
+            const stockItems = cart.map(item => ({
+                product_id: item.product.id,
+                quantity: item.quantity
+            }));
+            
+            const stockCheck = await checkStock(stockItems);
+            
+            if (!stockCheck.valid) {
+                // Show out of stock errors
+                if (stockCheck.out_of_stock && stockCheck.out_of_stock.length > 0) {
+                    stockCheck.out_of_stock.forEach((item: any) => {
+                        toast.error(item.message);
+                    });
+                }
+                
+                // Show insufficient stock errors
+                if (stockCheck.insufficient_stock && stockCheck.insufficient_stock.length > 0) {
+                    stockCheck.insufficient_stock.forEach((item: any) => {
+                        toast.error(item.message);
+                    });
+                }
+                
+                setIsProcessing(false);
+                return;
+            }
+
+            // 2. Create order with all information
             const orderData = {
                 nguoi_dung_id: user.id,
-                tong_tien: getTotalPrice(),
+                tong_tien: getFinalTotal(),
                 trang_thai: 'pending',
                 phuong_thuc_thanh_toan: paymentMethod,
+                ten_nguoi_nhan: shippingInfo.fullName,
+                so_dien_thoai_nguoi_nhan: shippingInfo.phone,
+                dia_chi_giao_hang: shippingInfo.address,
+                ghi_chu: shippingInfo.note || null,
+                ma_giam_gia_id: appliedCoupon?.coupon_id || null,
+                so_tien_giam: getDiscount()
             };
 
             console.log('Creating order with data:', orderData);
-            console.log('Shipping info:', shippingInfo);
             const order = await createOrder(orderData);
             console.log('Order created:', order);
 
-            // Create order items
+            // 3. Create order items
             for (const item of cart) {
                 const itemData = {
                     don_hang_id: order.id,
@@ -80,11 +158,13 @@ export default function CartPage() {
                 await createOrderItem(itemData);
             }
 
-            // Clear cart and shipping info
+            // 4. Clear cart and form
             clearCart();
             setShippingInfo({ fullName: '', phone: '', address: '', note: '' });
+            setCouponCode('');
+            setAppliedCoupon(null);
             
-            toast.success(`Đặt hàng thành công! Giao hàng đến: ${shippingInfo.address}`);
+            toast.success(`Đặt hàng thành công! Mã đơn hàng: #${order.id}`);
             router.push('/orders');
         } catch (error: any) {
             console.error('Error creating order:', error);
@@ -92,7 +172,8 @@ export default function CartPage() {
             // More detailed error message
             if (error.response) {
                 // Server responded with error
-                toast.error(`Lỗi: ${error.response.data.detail || 'Đặt hàng thất bại'}`);
+                const errorDetail = error.response.data.detail;
+                toast.error(errorDetail || 'Đặt hàng thất bại');
             } else if (error.request) {
                 // Request made but no response
                 toast.error('Không thể kết nối đến server. Vui lòng kiểm tra backend đã chạy chưa!');
@@ -237,7 +318,7 @@ export default function CartPage() {
                         <div className="space-y-4 mb-6">
                             <div className="flex justify-between text-gray-600">
                                 <span>Tạm tính</span>
-                                <span className="font-medium">{getTotalPrice().toLocaleString('vi-VN')}đ</span>
+                                <span className="font-medium">{getSubtotal().toLocaleString('vi-VN')}đ</span>
                             </div>
                             <div className="flex justify-between text-gray-600">
                                 <span>Phí vận chuyển</span>
@@ -245,14 +326,16 @@ export default function CartPage() {
                             </div>
                             <div className="flex justify-between text-gray-600">
                                 <span>Giảm giá</span>
-                                <span className="font-medium text-red-600">-$0.00</span>
+                                <span className="font-medium text-red-600">
+                                    {getDiscount() > 0 ? `-${getDiscount().toLocaleString('vi-VN')}đ` : '0đ'}
+                                </span>
                             </div>
 
                             <div className="border-t border-gray-200 pt-4">
                                 <div className="flex justify-between items-baseline">
                                     <span className="text-lg font-semibold text-gray-900">Tổng cộng</span>
                                     <span className="text-2xl font-bold text-primary">
-                                        {getTotalPrice().toLocaleString('vi-VN')}đ
+                                        {getFinalTotal().toLocaleString('vi-VN')}đ
                                     </span>
                                 </div>
                             </div>
@@ -397,16 +480,42 @@ export default function CartPage() {
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Mã giảm giá
                             </label>
-                            <div className="flex gap-2">
-                                <input
-                                    type="text"
-                                    placeholder="Nhập mã"
-                                    className="flex-1 input text-sm"
-                                />
-                                <button className="btn-secondary text-sm px-4">
-                                    Áp dụng
-                                </button>
-                            </div>
+                            {appliedCoupon ? (
+                                <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                                    <div className="flex-1">
+                                        <p className="text-sm font-medium text-green-800">
+                                            {appliedCoupon.ma_giam_gia?.ma_code}
+                                        </p>
+                                        <p className="text-xs text-green-600">
+                                            Giảm {appliedCoupon.discount_amount.toLocaleString('vi-VN')}đ
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={handleRemoveCoupon}
+                                        className="text-sm text-red-600 hover:text-red-700 font-medium"
+                                    >
+                                        Xóa
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={couponCode}
+                                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                        placeholder="Nhập mã"
+                                        className="flex-1 input text-sm"
+                                        disabled={isValidatingCoupon}
+                                    />
+                                    <button
+                                        onClick={handleApplyCoupon}
+                                        disabled={isValidatingCoupon || !couponCode.trim()}
+                                        className="btn-secondary text-sm px-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isValidatingCoupon ? 'Đang kiểm tra...' : 'Áp dụng'}
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
                         {/* Checkout Button */}

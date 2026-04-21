@@ -1,102 +1,675 @@
-// Database Schema for Electronics E-Commerce System
-// Use this file at https://dbdiagram.io/
+// ============================================
+// DATABASE SCHEMA - AI-SHOP E-COMMERCE
+// ============================================
+// Sử dụng file này tại: https://dbdiagram.io/
+// Cập nhật: Đã sync với models thực tế
 
 Project electronics_shop {
   database_type: 'MySQL'
-  Note: 'Electronics E-Commerce Database Schema'
+  Note: '''
+    Hệ thống thương mại điện tử bán thiết bị điện tử
+    Tích hợp AI Chatbot
+    8 bảng chính
+    
+    ⭐ CẬP NHẬT MỚI NHẤT (16/04/2026):
+    ✅ Đã thêm tính năng THANH TOÁN đầy đủ (PB10)
+    ✅ Thông tin giao hàng: tên, SĐT, địa chỉ, ghi chú
+    ✅ Áp dụng mã giảm giá với validation đầy đủ
+    ✅ Kiểm tra tồn kho trước thanh toán
+    ✅ Tính toán giá cuối cùng (tạm tính - giảm giá)
+    ✅ Báo cáo thống kê với biểu đồ (PB31)
+  '''
 }
 
-// Users Table
+// ============================================
+// 1. BẢNG NGƯỜI DÙNG (Users)
+// ============================================
 Table nguoi_dung {
-  id int [pk, increment, note: 'Primary Key']
-  email varchar(255) [unique, not null, note: 'User email']
-  mat_khau varchar(255) [not null, note: 'Hashed password']
-  ho_ten varchar(255) [null, note: 'Full name']
-  vai_tro varchar(20) [not null, default: 'user', note: 'Role: admin or user']
-  ngay_tao datetime [not null, default: `now()`, note: 'Created date']
+  id int [pk, increment, note: 'ID tự động tăng']
+  email varchar(255) [unique, not null, note: 'Email đăng nhập']
+  mat_khau varchar(255) [not null, note: 'Mật khẩu đã hash']
+  ho_ten varchar(255) [null, note: 'Họ và tên']
+  so_dien_thoai varchar(20) [null, note: 'Số điện thoại']
+  dia_chi text [null, note: 'Địa chỉ mặc định ⭐ MỚI']
+  avatar varchar(500) [null, note: 'URL ảnh đại diện ⭐ MỚI']
+  vai_tro varchar(20) [not null, default: 'user', note: 'Vai trò: admin, manager, user']
+  ngay_tao datetime [not null, default: `now()`, note: 'Ngày tạo tài khoản']
+  ngay_cap_nhat datetime [default: `now()`, note: 'Ngày cập nhật ⭐ MỚI']
   
   indexes {
-    email [unique]
+    email [unique, name: 'idx_email']
+    vai_tro [name: 'idx_vai_tro']
   }
   
-  Note: 'User accounts table'
+  Note: '''
+    Quản lý tài khoản người dùng
+    - Admin: Toàn quyền quản trị
+    - Manager: Quản lý sản phẩm, đơn hàng, đánh giá, mã giảm giá
+    - User: Khách hàng
+    
+    ⭐ CẬP NHẬT MỚI:
+    - dia_chi: Lưu địa chỉ mặc định của user
+    - avatar: URL ảnh đại diện
+    - ngay_cap_nhat: Tự động cập nhật khi có thay đổi
+  '''
 }
 
-// Categories Table
+// ============================================
+// 2. BẢNG DANH MỤC (Categories)
+// ============================================
 Table danh_muc {
-  id int [pk, increment, note: 'Primary Key']
-  ten varchar(255) [not null, note: 'Category name']
+  id int [pk, increment, note: 'ID tự động tăng']
+  ten varchar(255) [unique, not null, note: 'Tên danh mục']
   
-  Note: 'Product categories'
+  indexes {
+    ten [unique, name: 'idx_ten_danh_muc']
+  }
+  
+  Note: '''
+    Danh mục sản phẩm
+    VD: Laptop, Điện thoại, Tablet, Tai nghe, Phụ kiện, Đồng hồ thông minh
+  '''
 }
 
-// Products Table
+// ============================================
+// 3. BẢNG SẢN PHẨM (Products)
+// ============================================
 Table san_pham {
-  id int [pk, increment, note: 'Primary Key']
-  ten varchar(255) [not null, note: 'Product name']
-  mo_ta text [null, note: 'Product description']
-  gia decimal(10,2) [not null, note: 'Product price']
-  hinh_anh varchar(500) [null, note: 'Product image URL']
-  danh_muc_id int [not null, ref: > danh_muc.id, note: 'Category ID']
+  id int [pk, increment, note: 'ID tự động tăng']
+  ten varchar(255) [not null, note: 'Tên sản phẩm']
+  gia decimal(10,2) [not null, note: 'Giá bán (VNĐ)']
+  mo_ta text [null, note: 'Mô tả chi tiết']
+  hinh_anh varchar(500) [null, note: 'URL hình ảnh']
+  danh_muc_id int [not null, note: 'ID danh mục']
+  ton_kho int [not null, default: 0, note: 'Số lượng tồn kho ⭐ MỚI']
+  trang_thai varchar(20) [not null, default: 'active', note: 'Trạng thái: active, inactive ⭐ MỚI']
+  ngay_tao datetime [not null, default: `now()`, note: 'Ngày tạo sản phẩm']
+  ngay_cap_nhat datetime [default: `now()`, note: 'Ngày cập nhật ⭐ MỚI']
   
   indexes {
-    danh_muc_id
+    danh_muc_id [name: 'idx_danh_muc']
+    ten [name: 'idx_ten_san_pham']
+    trang_thai [name: 'idx_trang_thai']
   }
   
-  Note: 'Products table'
+  Note: '''
+    Sản phẩm điện tử
+    - Hỗ trợ tìm kiếm tiếng Việt có dấu
+    - Lọc theo danh mục
+    - Quản lý tồn kho
+    - Trạng thái active/inactive để ẩn/hiện sản phẩm
+    
+    ⭐ CẬP NHẬT MỚI:
+    - ton_kho: Quản lý số lượng tồn kho, kiểm tra trước thanh toán
+    - trang_thai: Ẩn/hiện sản phẩm (active/inactive)
+    - ngay_cap_nhat: Tự động cập nhật khi có thay đổi
+  '''
 }
 
-// Orders Table
+// ============================================
+// 4. BẢNG ĐƠN HÀNG (Orders) ⭐ ĐÃ CẬP NHẬT
+// ============================================
 Table don_hang {
-  id int [pk, increment, note: 'Primary Key']
-  nguoi_dung_id int [not null, ref: > nguoi_dung.id, note: 'User ID']
-  tong_tien decimal(10,2) [not null, note: 'Total amount']
-  trang_thai varchar(50) [not null, default: 'pending', note: 'Order status: pending, completed, cancelled']
-  ngay_tao datetime [not null, default: `now()`, note: 'Created date']
+  id int [pk, increment, note: 'ID tự động tăng']
+  nguoi_dung_id int [not null, note: 'ID người đặt hàng']
+  tong_tien decimal(10,2) [not null, note: 'Tổng tiền đơn hàng (sau giảm giá)']
+  trang_thai varchar(20) [not null, default: 'pending', note: 'Trạng thái: pending, completed, cancelled']
+  phuong_thuc_thanh_toan varchar(20) [not null, default: 'cod', note: 'Phương thức: cod, bank']
+  
+  ten_nguoi_nhan varchar(255) [null, note: 'Tên người nhận hàng ⭐ MỚI']
+  so_dien_thoai_nguoi_nhan varchar(20) [null, note: 'SĐT người nhận ⭐ MỚI']
+  dia_chi_giao_hang text [null, note: 'Địa chỉ giao hàng ⭐ MỚI']
+  ghi_chu text [null, note: 'Ghi chú đơn hàng ⭐ MỚI']
+  
+  ma_giam_gia_id int [null, note: 'ID mã giảm giá (nếu có) ⭐ MỚI']
+  so_tien_giam decimal(10,2) [not null, default: 0, note: 'Số tiền được giảm ⭐ MỚI']
+  
+  ngay_tao datetime [not null, default: `now()`, note: 'Ngày đặt hàng']
+  ngay_cap_nhat datetime [default: `now()`, note: 'Ngày cập nhật ⭐ MỚI']
   
   indexes {
-    nguoi_dung_id
-    trang_thai
+    nguoi_dung_id [name: 'idx_nguoi_dung']
+    trang_thai [name: 'idx_trang_thai']
+    ngay_tao [name: 'idx_ngay_tao']
+    ma_giam_gia_id [name: 'idx_ma_giam_gia']
   }
   
-  Note: 'Orders table'
+  Note: '''
+    Đơn hàng của khách
+    
+    Trạng thái:
+    - pending: Chờ xác nhận
+    - completed: Hoàn thành
+    - cancelled: Đã hủy
+    
+    Phương thức thanh toán:
+    - cod: Thanh toán khi nhận hàng
+    - bank: Chuyển khoản ngân hàng
+    
+    ⭐ CẬP NHẬT MỚI (TÍNH NĂNG THANH TOÁN):
+    
+    THÔNG TIN GIAO HÀNG (BẮT BUỘC):
+    - ten_nguoi_nhan: Tên người nhận (validate không để trống)
+    - so_dien_thoai_nguoi_nhan: SĐT người nhận (validate 10-11 số)
+    - dia_chi_giao_hang: Địa chỉ chi tiết (validate không để trống)
+    - ghi_chu: Ghi chú thêm (tùy chọn)
+    
+    MÃ GIẢM GIÁ (TÙY CHỌN):
+    - ma_giam_gia_id: Link đến bảng ma_giam_gia
+    - so_tien_giam: Số tiền thực tế được giảm
+    - Tự động validate: hạn sử dụng, thời gian, giá trị đơn tối thiểu
+    - Tự động trừ lượt sử dụng khi đặt hàng thành công
+    
+    QUY TRÌNH THANH TOÁN:
+    1. Kiểm tra tồn kho sản phẩm (API: /san-pham/check-stock)
+    2. Validate mã giảm giá nếu có (API: /ma-giam-gia/validate)
+    3. Validate thông tin giao hàng (backend tự động)
+    4. Tạo đơn hàng với đầy đủ thông tin
+    5. Tạo chi tiết đơn hàng
+    6. Trừ tồn kho và lượt sử dụng mã giảm giá
+    
+    TÍNH TOÁN GIÁ:
+    - Tạm tính = SUM(gia * so_luong)
+    - Giảm giá = so_tien_giam (từ mã giảm giá)
+    - Tổng cuối = tong_tien = Tạm tính - Giảm giá
+  '''
 }
 
-// Order Details Table
+// ============================================
+// 5. BẢNG CHI TIẾT ĐƠN HÀNG (Order Details)
+// ============================================
 Table chi_tiet_don_hang {
-  id int [pk, increment, note: 'Primary Key']
-  don_hang_id int [not null, ref: > don_hang.id, note: 'Order ID']
-  san_pham_id int [not null, ref: > san_pham.id, note: 'Product ID']
-  so_luong int [not null, note: 'Quantity']
-  gia decimal(10,2) [not null, note: 'Price at time of order']
+  id int [pk, increment, note: 'ID tự động tăng']
+  don_hang_id int [not null, note: 'ID đơn hàng']
+  san_pham_id int [not null, note: 'ID sản phẩm']
+  so_luong int [not null, note: 'Số lượng mua']
   
   indexes {
-    don_hang_id
-    san_pham_id
+    don_hang_id [name: 'idx_don_hang']
+    san_pham_id [name: 'idx_san_pham']
   }
   
-  Note: 'Order details table'
+  Note: '''
+    Chi tiết từng sản phẩm trong đơn hàng
+    Lưu số lượng sản phẩm được mua
+  '''
 }
 
-// Chat History Table
+// ============================================
+// 6. BẢNG ĐÁNH GIÁ (Reviews)
+// ============================================
+Table danh_gia {
+  id int [pk, increment, note: 'ID tự động tăng']
+  nguoi_dung_id int [not null, note: 'ID người đánh giá']
+  san_pham_id int [not null, note: 'ID sản phẩm']
+  diem_so float [not null, note: 'Điểm đánh giá (1-5 sao)']
+  binh_luan text [null, note: 'Bình luận đánh giá']
+  ngay_tao datetime [not null, default: `now()`, note: 'Ngày đánh giá']
+  
+  indexes {
+    nguoi_dung_id [name: 'idx_nguoi_dung_dg']
+    san_pham_id [name: 'idx_san_pham_dg']
+    diem_so [name: 'idx_diem_so']
+  }
+  
+  Note: '''
+    Đánh giá sản phẩm từ khách hàng
+    - Điểm: 1-5 sao (float để hỗ trợ 0.5 sao)
+    - Bình luận là optional
+    - Mỗi user có thể đánh giá nhiều lần
+  '''
+}
+
+// ============================================
+// 7. BẢNG MÃ GIẢM GIÁ (Coupons)
+// ============================================
+Table ma_giam_gia {
+  id int [pk, increment, note: 'ID tự động tăng']
+  ma_code varchar(50) [unique, not null, note: 'Mã giảm giá (VD: SUMMER2024)']
+  mo_ta varchar(255) [null, note: 'Mô tả mã giảm giá']
+  loai_giam varchar(20) [not null, default: 'percent', note: 'Loại: percent (%) hoặc fixed (VNĐ)']
+  gia_tri_giam decimal(10,2) [not null, note: 'Giá trị giảm (% hoặc VNĐ)']
+  gia_tri_don_toi_thieu decimal(10,2) [default: 0, note: 'Giá trị đơn hàng tối thiểu']
+  so_luong int [default: 1, note: 'Số lượng mã có thể dùng']
+  da_su_dung int [default: 0, note: 'Số lượng đã sử dụng']
+  ngay_bat_dau datetime [default: `now()`, note: 'Ngày bắt đầu hiệu lực']
+  ngay_ket_thuc datetime [null, note: 'Ngày hết hạn']
+  hoat_dong boolean [default: true, note: 'Trạng thái hoạt động']
+  ngay_tao datetime [not null, default: `now()`, note: 'Ngày tạo mã']
+  ngay_cap_nhat datetime [default: `now()`, note: 'Ngày cập nhật']
+  
+  indexes {
+    ma_code [unique, name: 'idx_ma_code']
+    hoat_dong [name: 'idx_hoat_dong']
+    ngay_bat_dau [name: 'idx_ngay_bat_dau']
+    ngay_ket_thuc [name: 'idx_ngay_ket_thuc']
+  }
+  
+  Note: '''
+    Mã giảm giá cho đơn hàng
+    - Loại percent: Giảm theo % (VD: 10% = 10.00)
+    - Loại fixed: Giảm số tiền cố định (VD: 50000 VNĐ)
+    - Có giới hạn số lượng và thời gian sử dụng
+    - Admin có thể tạo/sửa/xóa, Manager chỉ tạo/sửa
+  '''
+}
+
+// ============================================
+// 8. BẢNG LỊCH SỬ CHAT (Chat History)
+// ============================================
 Table lich_su_chat {
-  id int [pk, increment, note: 'Primary Key']
-  nguoi_dung_id int [null, ref: > nguoi_dung.id, note: 'User ID (nullable for guests)']
-  tin_nhan text [not null, note: 'User message']
-  phan_hoi text [null, note: 'AI response']
-  ngay_tao datetime [not null, default: `now()`, note: 'Created date']
+  id int [pk, increment, note: 'ID tự động tăng']
+  nguoi_dung_id int [not null, note: 'ID người dùng']
+  cau_hoi text [not null, note: 'Câu hỏi từ người dùng']
+  cau_tra_loi text [not null, note: 'Câu trả lời từ AI']
+  ngay_tao datetime [not null, default: `now()`, note: 'Thời gian chat']
   
   indexes {
-    nguoi_dung_id
+    nguoi_dung_id [name: 'idx_nguoi_dung_chat']
+    ngay_tao [name: 'idx_ngay_tao_chat']
   }
   
-  Note: 'AI chatbot conversation history'
+  Note: '''
+    Lịch sử chat với AI Chatbot
+    - Lưu trữ hội thoại giữa user và AI
+    - Hỗ trợ OpenAI và Google Gemini
+    - Admin có thể xem và quản lý lịch sử chat
+  '''
 }
 
-// Relationships Documentation
-// One-to-Many Relationships:
-// - danh_muc (1) -> san_pham (N)
-// - nguoi_dung (1) -> don_hang (N)
-// - nguoi_dung (1) -> lich_su_chat (N)
-// - don_hang (1) -> chi_tiet_don_hang (N)
-// - san_pham (1) -> chi_tiet_don_hang (N)
+// ============================================
+// RELATIONSHIPS (Mối quan hệ giữa các bảng)
+// ============================================
+
+// Danh mục -> Sản phẩm (1-N)
+Ref: danh_muc.id < san_pham.danh_muc_id [delete: restrict]
+
+// Người dùng -> Đơn hàng (1-N)
+Ref: nguoi_dung.id < don_hang.nguoi_dung_id [delete: cascade]
+
+// Người dùng -> Đánh giá (1-N)
+Ref: nguoi_dung.id < danh_gia.nguoi_dung_id [delete: cascade]
+
+// Người dùng -> Lịch sử chat (1-N)
+Ref: nguoi_dung.id < lich_su_chat.nguoi_dung_id [delete: cascade]
+
+// Đơn hàng -> Chi tiết đơn hàng (1-N)
+Ref: don_hang.id < chi_tiet_don_hang.don_hang_id [delete: cascade]
+
+// Sản phẩm -> Chi tiết đơn hàng (1-N)
+Ref: san_pham.id < chi_tiet_don_hang.san_pham_id [delete: restrict]
+
+// Sản phẩm -> Đánh giá (1-N)
+Ref: san_pham.id < danh_gia.san_pham_id [delete: cascade]
+
+// Mã giảm giá -> Đơn hàng (1-N)
+Ref: ma_giam_gia.id < don_hang.ma_giam_gia_id [delete: set null]
+
+// ============================================
+// NOTES & DOCUMENTATION
+// ============================================
+
+Note relationships {
+  '''
+  MỐI QUAN HỆ CHÍNH:
+  
+  1. Một DANH MỤC có nhiều SẢN PHẨM
+  2. Một NGƯỜI DÙNG có nhiều ĐƠN HÀNG
+  3. Một NGƯỜI DÙNG có nhiều ĐÁNH GIÁ
+  4. Một NGƯỜI DÙNG có nhiều LỊCH SỬ CHAT
+  5. Một ĐƠN HÀNG có nhiều CHI TIẾT ĐƠN HÀNG
+  6. Một SẢN PHẨM có nhiều CHI TIẾT ĐƠN HÀNG
+  7. Một SẢN PHẨM có nhiều ĐÁNH GIÁ
+  8. Một MÃ GIẢM GIÁ có thể dùng cho nhiều ĐƠN HÀNG
+  
+  DELETE RULES:
+  - CASCADE: Xóa cha → xóa con (VD: xóa user → xóa đơn hàng của user)
+  - RESTRICT: Không cho xóa nếu còn con (VD: không xóa sản phẩm nếu đã có trong đơn hàng)
+  - SET NULL: Xóa cha → set con = null (VD: xóa mã giảm giá → đơn hàng vẫn giữ nhưng mã = null)
+  '''
+}
+
+Note statistics {
+  '''
+  THỐNG KÊ HỮU ÍCH (PB31 - BÁO CÁO THỐNG KÊ):
+  
+  📊 DASHBOARD STATISTICS (API: /api/statistics/dashboard):
+  
+  1. Doanh thu tháng hiện tại với % biến động:
+     SELECT 
+       SUM(tong_tien) as current_month_revenue
+     FROM don_hang 
+     WHERE MONTH(ngay_tao) = MONTH(NOW()) 
+       AND YEAR(ngay_tao) = YEAR(NOW())
+       AND trang_thai = 'completed'
+     
+     -- So sánh với tháng trước để tính % biến động
+  
+  2. Số lượng đơn hàng hoàn thành:
+     SELECT COUNT(*) 
+     FROM don_hang 
+     WHERE trang_thai = 'completed'
+  
+  3. Pie Chart - Trạng thái đơn hàng:
+     SELECT 
+       trang_thai,
+       COUNT(*) as count,
+       COUNT(*) * 100.0 / (SELECT COUNT(*) FROM don_hang) as percentage
+     FROM don_hang
+     GROUP BY trang_thai
+  
+  4. Top 10 sản phẩm bán chạy nhất:
+     SELECT 
+       sp.id,
+       sp.ten,
+       sp.gia,
+       sp.hinh_anh,
+       SUM(ctdh.so_luong) as total_sold,
+       SUM(ctdh.so_luong * sp.gia) as total_revenue
+     FROM san_pham sp
+     JOIN chi_tiet_don_hang ctdh ON sp.id = ctdh.san_pham_id
+     JOIN don_hang dh ON ctdh.don_hang_id = dh.id
+     WHERE dh.trang_thai = 'completed'
+     GROUP BY sp.id, sp.ten, sp.gia, sp.hinh_anh
+     ORDER BY total_sold DESC
+     LIMIT 10
+  
+  📈 REVENUE STATISTICS (API: /api/statistics/revenue):
+  
+  5. Doanh thu theo tháng (12 tháng gần nhất):
+     SELECT 
+       YEAR(ngay_tao) as year,
+       MONTH(ngay_tao) as month,
+       SUM(tong_tien) as revenue,
+       COUNT(*) as order_count
+     FROM don_hang
+     WHERE trang_thai = 'completed'
+     GROUP BY YEAR(ngay_tao), MONTH(ngay_tao)
+     ORDER BY year DESC, month DESC
+     LIMIT 12
+  
+  6. Giá trị đơn hàng trung bình:
+     SELECT AVG(tong_tien) as avg_order_value
+     FROM don_hang
+     WHERE trang_thai = 'completed'
+  
+  7. Tổng tiền giảm giá:
+     SELECT SUM(so_tien_giam) as total_discount
+     FROM don_hang
+     WHERE trang_thai = 'completed'
+  
+  📦 PRODUCT STATISTICS (API: /api/statistics/products):
+  
+  8. Sản phẩm theo danh mục:
+     SELECT 
+       dm.ten as category,
+       COUNT(sp.id) as count
+     FROM danh_muc dm
+     JOIN san_pham sp ON dm.id = sp.danh_muc_id
+     WHERE sp.trang_thai = 'active'
+     GROUP BY dm.id, dm.ten
+  
+  9. Sản phẩm sắp hết hàng (tồn kho < 10):
+     SELECT 
+       sp.id,
+       sp.ten,
+       sp.ton_kho,
+       sp.gia,
+       dm.ten as danh_muc
+     FROM san_pham sp
+     JOIN danh_muc dm ON sp.danh_muc_id = dm.id
+     WHERE sp.ton_kho < 10 
+       AND sp.ton_kho > 0
+       AND sp.trang_thai = 'active'
+     ORDER BY sp.ton_kho ASC
+  
+  10. Sản phẩm hết hàng:
+      SELECT COUNT(*) 
+      FROM san_pham 
+      WHERE ton_kho = 0 AND trang_thai = 'active'
+  
+  🎟️ COUPON STATISTICS (API: /api/statistics/coupons):
+  
+  11. Hiệu quả mã giảm giá:
+      SELECT 
+        mg.id,
+        mg.ma_code,
+        mg.mo_ta,
+        COUNT(dh.id) as usage_count,
+        SUM(dh.so_tien_giam) as total_discount,
+        AVG(dh.tong_tien) as avg_order_value
+      FROM ma_giam_gia mg
+      LEFT JOIN don_hang dh ON mg.id = dh.ma_giam_gia_id
+      WHERE dh.trang_thai = 'completed'
+      GROUP BY mg.id, mg.ma_code, mg.mo_ta
+      ORDER BY total_discount DESC
+  
+  12. Tỷ lệ sử dụng mã giảm giá:
+      SELECT 
+        COUNT(CASE WHEN ma_giam_gia_id IS NOT NULL THEN 1 END) * 100.0 / COUNT(*) as usage_rate
+      FROM don_hang
+      WHERE trang_thai = 'completed'
+  
+  13. Mã giảm giá sắp hết hạn (7 ngày tới):
+      SELECT 
+        id,
+        ma_code,
+        mo_ta,
+        ngay_ket_thuc,
+        so_luong - da_su_dung as remaining_quantity
+      FROM ma_giam_gia
+      WHERE hoat_dong = TRUE
+        AND ngay_ket_thuc <= DATE_ADD(NOW(), INTERVAL 7 DAY)
+        AND ngay_ket_thuc >= NOW()
+      ORDER BY ngay_ket_thuc ASC
+  
+  👥 CUSTOMER STATISTICS (API: /api/statistics/customers):
+  
+  14. Top 10 khách hàng VIP (mua nhiều nhất):
+      SELECT 
+        nd.id,
+        nd.ho_ten,
+        nd.email,
+        nd.so_dien_thoai,
+        COUNT(dh.id) as total_orders,
+        SUM(dh.tong_tien) as total_spent
+      FROM nguoi_dung nd
+      JOIN don_hang dh ON nd.id = dh.nguoi_dung_id
+      WHERE dh.trang_thai = 'completed'
+      GROUP BY nd.id, nd.ho_ten, nd.email, nd.so_dien_thoai
+      ORDER BY total_spent DESC
+      LIMIT 10
+  
+  15. Khách hàng mới trong tháng:
+      SELECT COUNT(*) 
+      FROM nguoi_dung
+      WHERE vai_tro = 'user'
+        AND MONTH(ngay_tao) = MONTH(NOW())
+        AND YEAR(ngay_tao) = YEAR(NOW())
+  
+  💬 CHAT STATISTICS:
+  
+  16. Thống kê chat theo người dùng:
+      SELECT 
+        nd.ho_ten,
+        nd.email,
+        COUNT(lsc.id) as message_count
+      FROM nguoi_dung nd
+      LEFT JOIN lich_su_chat lsc ON nd.id = lsc.nguoi_dung_id
+      GROUP BY nd.id, nd.ho_ten, nd.email
+      ORDER BY message_count DESC
+  
+  17. Tổng số chat theo ngày:
+      SELECT 
+        DATE(ngay_tao) as date,
+        COUNT(*) as message_count
+      FROM lich_su_chat
+      GROUP BY DATE(ngay_tao)
+      ORDER BY date DESC
+  
+  💳 PAYMENT STATISTICS:
+  
+  18. Phương thức thanh toán phổ biến:
+      SELECT 
+        phuong_thuc_thanh_toan,
+        COUNT(*) as count,
+        SUM(tong_tien) as total_amount
+      FROM don_hang
+      WHERE trang_thai = 'completed'
+      GROUP BY phuong_thuc_thanh_toan
+  
+  19. Tổng tiết kiệm của khách hàng:
+      SELECT SUM(so_tien_giam) as total_savings
+      FROM don_hang
+      WHERE trang_thai = 'completed'
+  
+  📊 BIỂU ĐỒ (CHARTS):
+  
+  - Pie Chart: Trạng thái đơn hàng (pending, completed, cancelled)
+  - Area Chart: Doanh thu 12 tháng gần nhất với gradient
+  - Bar Chart: Top 10 sản phẩm bán chạy (dual-axis: số lượng + doanh thu)
+  - Progress Bars: Tỷ lệ hoàn thành, giá trị đơn TB, sản phẩm/đơn
+  
+  🎨 CÔNG NGHỆ:
+  - Backend: FastAPI + SQLAlchemy
+  - Frontend: Next.js + TypeScript + Recharts
+  - Database: MySQL với indexes tối ưu
+  '''
+}
+
+Note features {
+  '''
+  TÍNH NĂNG CHÍNH:
+  
+  🛒 E-COMMERCE:
+  - Quản lý sản phẩm theo danh mục
+  - Giỏ hàng và đặt hàng
+  - Quản lý tồn kho
+  - Mã giảm giá
+  - Đánh giá sản phẩm
+  
+  👥 NGƯỜI DÙNG:
+  - 3 vai trò: Admin, Manager, User
+  - Quản lý profile với avatar và địa chỉ
+  - Lịch sử đơn hàng
+  
+  🤖 AI CHATBOT:
+  - Tích hợp OpenAI/Gemini
+  - Lưu lịch sử chat
+  - Admin quản lý và xem thống kê
+  
+  📊 ADMIN DASHBOARD:
+  - Thống kê tổng quan
+  - Quản lý toàn bộ hệ thống
+  - Cấu hình chatbox AI
+  - Báo cáo thống kê với biểu đồ (PB31)
+  
+  ⭐ TÍNH NĂNG THANH TOÁN (PB10):
+  
+  💳 CHECKOUT FLOW:
+  1. Kiểm tra tồn kho trước thanh toán
+     - API: POST /api/san-pham/check-stock
+     - Validate số lượng còn đủ không
+     - Hiển thị lỗi nếu hết hàng
+  
+  2. Nhập thông tin giao hàng (BẮT BUỘC)
+     - Tên người nhận (không để trống)
+     - Số điện thoại (10-11 số)
+     - Địa chỉ chi tiết (không để trống)
+     - Ghi chú (tùy chọn)
+  
+  3. Áp dụng mã giảm giá (TÙY CHỌN)
+     - API: POST /api/ma-giam-gia/validate
+     - Validate: hạn sử dụng, thời gian, giá trị đơn tối thiểu
+     - Tính số tiền giảm (% hoặc fixed)
+     - Hiển thị số tiền tiết kiệm
+  
+  4. Chọn phương thức thanh toán
+     - COD: Thanh toán khi nhận hàng
+     - Bank: Chuyển khoản ngân hàng
+  
+  5. Xác nhận và tạo đơn hàng
+     - Lưu đầy đủ thông tin giao hàng
+     - Lưu mã giảm giá đã sử dụng
+     - Trừ lượt sử dụng mã giảm giá
+     - Tạo chi tiết đơn hàng
+     - Hiển thị mã đơn hàng
+  
+  💰 TÍNH TOÁN GIÁ:
+  - Tạm tính = SUM(gia × so_luong)
+  - Phí vận chuyển = 0 (miễn phí)
+  - Giảm giá = so_tien_giam (từ mã)
+  - Tổng cuối = Tạm tính - Giảm giá
+  
+  🔒 VALIDATION:
+  - Backend tự động validate thông tin giao hàng
+  - Kiểm tra mã giảm giá hợp lệ
+  - Kiểm tra tồn kho đủ không
+  - Validate số điện thoại format
+  
+  ⭐ BÁO CÁO THỐNG KÊ (PB31):
+  
+  📊 DASHBOARD STATISTICS:
+  - Card doanh thu tháng hiện tại với % biến động
+  - Summary cards: Đơn hàng, Sản phẩm, Khách hàng
+  - Pie Chart: Trạng thái đơn hàng (Recharts)
+  - Area Chart: Doanh thu 12 tháng với gradient
+  - Bar Chart: Top 10 sản phẩm (dual-axis)
+  - Thống kê nhanh: Tỷ lệ hoàn thành, Giá trị đơn TB
+  
+  📈 REVENUE STATISTICS:
+  - Tổng doanh thu (chỉ completed)
+  - Doanh thu theo trạng thái
+  - Giá trị đơn hàng trung bình
+  - Doanh thu theo tháng (12 tháng)
+  - Tổng tiền giảm giá
+  - Filter theo khoảng thời gian
+  
+  📦 PRODUCT STATISTICS:
+  - Sản phẩm theo danh mục
+  - Thống kê giá (min, max, avg)
+  - Sản phẩm sắp hết hàng (< 10)
+  - Sản phẩm hết hàng
+  
+  🎟️ COUPON STATISTICS:
+  - Hiệu quả mã giảm giá
+  - Tỷ lệ sử dụng mã
+  - Tổng tiết kiệm của khách hàng
+  - Mã sắp hết hạn (7 ngày)
+  
+  👥 CUSTOMER STATISTICS:
+  - Top 10 khách hàng VIP
+  - Tổng số khách hàng
+  - Khách hàng mới trong tháng
+  
+  🎨 BIỂU ĐỒ TRỰC QUAN:
+  - Recharts 2.12.7 (React charting library)
+  - Pie Chart với màu sắc phân biệt
+  - Area Chart với gradient đẹp mắt
+  - Bar Chart với dual Y-axis
+  - Custom Tooltip với định dạng VNĐ
+  - Responsive trên mọi thiết bị
+  - Smooth animations
+  
+  🔄 TÍNH NĂNG BỔ SUNG:
+  - Nút "Làm mới" để cập nhật real-time
+  - Export báo cáo (JSON, PDF/CSV đang phát triển)
+  - Query tối ưu với indexes
+  - Chỉ tính đơn completed cho doanh thu
+  
+  🎯 API ENDPOINTS:
+  - GET /api/statistics/dashboard (Dashboard chính)
+  - GET /api/statistics/revenue (Doanh thu chi tiết)
+  - GET /api/statistics/products (Thống kê sản phẩm)
+  - GET /api/statistics/coupons (Thống kê mã giảm giá)
+  - GET /api/statistics/customers (Thống kê khách hàng)
+  - GET /api/statistics/export (Export báo cáo)
+  
+  📱 FRONTEND:
+  - Trang: /admin/statistics
+  - Responsive design với Tailwind CSS
+  - TypeScript cho type safety
+  - Loading states và error handling
+  - Gradient cards và visual effects
+  '''
+}

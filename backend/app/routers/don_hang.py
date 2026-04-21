@@ -40,6 +40,48 @@ def create_order(order: DonHangCreate, db: Session = Depends(get_db)):
     if order.phuong_thuc_thanh_toan and order.phuong_thuc_thanh_toan not in valid_methods:
         raise HTTPException(status_code=400, detail="Phương thức thanh toán không hợp lệ")
     
+    # Validate shipping info
+    if not order.ten_nguoi_nhan or not order.ten_nguoi_nhan.strip():
+        raise HTTPException(status_code=400, detail="Vui lòng nhập tên người nhận")
+    if not order.so_dien_thoai_nguoi_nhan or not order.so_dien_thoai_nguoi_nhan.strip():
+        raise HTTPException(status_code=400, detail="Vui lòng nhập số điện thoại người nhận")
+    if not order.dia_chi_giao_hang or not order.dia_chi_giao_hang.strip():
+        raise HTTPException(status_code=400, detail="Vui lòng nhập địa chỉ giao hàng")
+    
+    # Validate coupon if provided
+    if order.ma_giam_gia_id:
+        from app.models import MaGiamGia
+        from datetime import datetime
+        
+        coupon = db.query(MaGiamGia).filter(MaGiamGia.id == order.ma_giam_gia_id).first()
+        if not coupon:
+            raise HTTPException(status_code=404, detail="Mã giảm giá không tồn tại")
+        
+        # Check if coupon is active
+        if not coupon.hoat_dong:
+            raise HTTPException(status_code=400, detail="Mã giảm giá đã hết hạn hoặc không còn hiệu lực")
+        
+        # Check date range
+        now = datetime.utcnow()
+        if coupon.ngay_bat_dau and now < coupon.ngay_bat_dau:
+            raise HTTPException(status_code=400, detail="Mã giảm giá chưa có hiệu lực")
+        if coupon.ngay_ket_thuc and now > coupon.ngay_ket_thuc:
+            raise HTTPException(status_code=400, detail="Mã giảm giá đã hết hạn")
+        
+        # Check usage limit
+        if coupon.so_luong and coupon.da_su_dung >= coupon.so_luong:
+            raise HTTPException(status_code=400, detail="Mã giảm giá đã hết lượt sử dụng")
+        
+        # Check minimum order value
+        if coupon.gia_tri_don_toi_thieu and order.tong_tien < coupon.gia_tri_don_toi_thieu:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Đơn hàng tối thiểu {coupon.gia_tri_don_toi_thieu:,.0f}đ để sử dụng mã này"
+            )
+        
+        # Update usage count
+        coupon.da_su_dung += 1
+    
     db_order = DonHang(**order.model_dump())
     db.add(db_order)
     db.commit()

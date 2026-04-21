@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { Users, Package, ShoppingCart, FolderTree, MessageSquare, Star, Ticket } from 'lucide-react';
+import { Users, Package, ShoppingCart, FolderTree, MessageSquare, Star, Ticket, BarChart3 } from 'lucide-react';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -134,6 +134,20 @@ export default function AdminDashboard() {
 
       {/* Management Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Link href="/admin/statistics" className="card p-6 hover:shadow-lg transition-all group">
+          <div className="flex items-start space-x-4">
+            <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
+              <BarChart3 className="w-6 h-6 text-indigo-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
+                Báo cáo thống kê
+              </h3>
+              <p className="text-gray-600 text-sm">Xem doanh thu và thống kê kinh doanh</p>
+            </div>
+          </div>
+        </Link>
+        
         <Link href="/admin/products" className="card p-6 hover:shadow-lg transition-all group">
           <div className="flex items-start space-x-4">
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
@@ -220,6 +234,23 @@ export default function AdminDashboard() {
             </div>
           </div>
         </Link>
+        
+        {/* Chỉ Admin mới thấy Quản lý Chatbox */}
+        {isAdmin && (
+          <Link href="/admin/chatbox" className="card p-6 hover:shadow-lg transition-all group">
+            <div className="flex items-start space-x-4">
+              <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
+                <MessageSquare className="w-6 h-6 text-indigo-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
+                  Quản lý Chatbox AI
+                </h3>
+                <p className="text-gray-600 text-sm">Cấu hình và xem lịch sử chat</p>
+              </div>
+            </div>
+          </Link>
+        )}
       </div>
     </div>
   );
